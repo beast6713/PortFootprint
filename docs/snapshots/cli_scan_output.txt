@@ -1,0 +1,25 @@
+=================================================
+PortFootprint v1.0.0
+=================================================
+Target          localhost
+Resolved IP     127.0.0.1
+Scanning        1 Ports
+Threads         20
+--------------------------------------------
+
+Scanning: [                              ] 0.0% (Completed 0/1, 0 workers active)[*] Port 135/tcp is OPEN
+
+Scanning: [==============================] 100.0% (Completed 1/1, 0 workers active)
+                                                                                
+135/tcp        OPEN      Unknown Service                    
+--------------------------------------------
+Summary
+Open            1
+Closed          0
+--------------------------------------------
+Performance Metrics
+Scan Speed      0.2 ports/sec
+Services Found  1
+Top Protocol    Unknown Service
+Duration        4.03 sec
+=================================================

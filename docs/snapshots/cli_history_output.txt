@@ -1,0 +1,16 @@
+=================================================
+PortFootprint Scan History Index
+=================================================
+[2026-07-08 23:09:12] Target: localhost
+  Summary: Total 1 | Open 1 | Filtered 0 | Closed 0
+[2026-07-08 23:08:45] Target: localhost
+  Summary: Total 1 | Open 1 | Filtered 0 | Closed 0
+[2026-07-08 23:04:56] Target: localhost
+  Summary: Total 2 | Open 1 | Filtered 0 | Closed 1
+  Reports: json: doc_report.json, csv: doc_report.csv, html: doc_report.html
+[2026-07-08 23:04:38] Target: localhost
+  Summary: Total 2 | Open 1 | Filtered 0 | Closed 1
+  Reports: json: doc_report.json, csv: doc_report.csv, html: doc_report.html
+[2026-07-08 23:04:23] Target: localhost
+  Summary: Total 1 | Open 1 | Filtered 0 | Closed 0
+=================================================

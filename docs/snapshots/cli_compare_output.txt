@@ -1,0 +1,8 @@
+=================================================
+Scan Comparison Report
+Old Target:      localhost
+New Target:      localhost
+=================================================
+
+No differences detected between the two scans.
+=================================================

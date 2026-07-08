@@ -1,0 +1,103 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "portfootprint"
+version = "1.0.0"
+description = "A professional, modular, dependency-free TCP Port Scanner and Service Fingerprinting Framework."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+    { name = "PortFootprint Authors", email = "security@example.com" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Information Technology",
+    "Topic :: Security",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+    "bandit>=1.7.5",
+    "pre-commit>=3.0.0",
+]
+
+[project.scripts]
+portfootprint = "portfootprint.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["portfootprint*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "W",   # Pycodestyle & Pyflakes
+    "I",             # Isort
+    "N",             # Pep8-naming
+    "UP",            # Pyupgrade
+    "B",             # Flake8-bugbear
+    "A",             # Flake8-builtins
+    "C4",            # Flake8-comprehensions
+    "RET",           # Flake8-return
+    "SIM",           # Flake8-simplify
+    "ARG",           # Flake8-unused-arguments
+    "TRY",           # Tryceratops
+    "RUF",           # Ruff-specific rules
+]
+ignore = [
+    "TRY003",        # Avoid specifying long messages in exceptions
+    "ARG002",        # Ignore unused method arguments (implements base signatures)
+    "TRY301",        # Abstract raise to inner function
+    "TRY401",        # Redundant exception details in logger.exception
+    "TRY300",        # Consider moving return to else block
+    "E501",          # Line length limit (prefer wrapping when readable)
+]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+ignore_missing_imports = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+check_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[tool.coverage.run]
+source = ["portfootprint"]
+branch = true
+omit = [
+    "portfootprint/main.py",
+    "portfootprint/services/protocols/database.py",
+    "portfootprint/core/history.py",
+    "portfootprint/services/protocols/irc.py",
+    "portfootprint/services/protocols/smtp.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "pass",
+]
