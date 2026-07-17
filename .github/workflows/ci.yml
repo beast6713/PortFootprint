@@ -1,69 +1,154 @@
-name: PortFootprint CI
+name: PortFootprint Production CI/CD
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, develop ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main, master ]
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
-  static-analysis:
-    name: Static Analysis
+  lint-and-format:
+    name: Code Quality Verification
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.9"
-        cache: 'pip'
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
 
-    - name: Install Linting & Security Tools
-      run: |
-        python -m pip install --upgrade pip
-        pip install ruff mypy bandit
+      - name: Install Linting & Formatting Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff black mypy
 
-    - name: Check Formatting & Lint with Ruff
-      run: ruff check .
+      - name: Verify Code Formatting (Black)
+        run: black --check .
 
-    - name: Run Strict Type Checks with MyPy
-      run: mypy portfootprint/
+      - name: Perform Static Code Analysis (Ruff)
+        run: ruff check .
 
-    - name: Run Security Scans with Bandit
-      run: bandit -r portfootprint/
+      - name: Perform Strict Type Checking (MyPy)
+        run: mypy portfootprint/
 
-  build-and-test:
-    name: Build & Test (${{ matrix.os }} - Python ${{ matrix.python-version }})
-    needs: static-analysis
+  security-audit:
+    name: Security Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+
+      - name: Install Security Tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit pip-audit
+
+      - name: Run Code Analysis Security Scan (Bandit)
+        run: bandit -r portfootprint/ -ll -ii
+
+      - name: Scan Third-Party Supply Chain (pip-audit)
+        run: pip-audit
+
+  test-matrix:
+    name: Verification Matrix (${{ matrix.os }} - Python ${{ matrix.python-version }})
+    needs: [lint-and-format, security-audit]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.9", "3.10", "3.11", "3.12"]
-
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
 
-    - name: Install Development dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e ".[dev]"
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
 
-    - name: Run Test Suite with Pytest & Coverage
-      run: |
-        python -m pytest --cov=portfootprint --cov-report=term-missing tests/
+      - name: Run Test Suite with Pytest & Coverage
+        run: |
+          python -m pytest --cov=portfootprint --cov-report=xml --cov-report=term-missing tests/
 
-    - name: Verify Package Build
-      run: |
-        pip install build
-        python -m build
+      - name: Upload Test Coverage Report (Ubuntu Only)
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: coverage.xml
+
+  docker-build:
+    name: Container Build Verification
+    needs: test-matrix
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Container (Dry Run)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: beast6713/portfootprint:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  release-automation:
+    name: Automated Tag Release
+    needs: [test-matrix, docker-build]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Packaging Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+
+      - name: Build Source Package Distribution
+        run: python -m build
+
+      - name: Generate Automated GitHub Release Draft
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          draft: true
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
