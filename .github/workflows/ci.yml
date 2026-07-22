@@ -145,7 +145,7 @@ jobs:
         run: python -m build
 
       - name: Generate Automated GitHub Release Draft
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: dist/*
           draft: true
