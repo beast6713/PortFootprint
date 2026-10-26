@@ -3,6 +3,7 @@ ScanManager orchestrating the overall resolution, scan execution, and results ag
 """
 
 import logging
+import sys
 
 from portfootprint.cli.formatter import TerminalFormatter
 from portfootprint.cli.progress import ConsoleProgressRenderer
@@ -98,7 +99,10 @@ class ScanManager:
 
         # 5. Compile and export final outputs
         scan_result = aggregator.compile()
-        TerminalFormatter.print_scan_result(scan_result, verbose=self.config.verbose)
+        if sys.stdout.isatty():
+            TerminalFormatter.print_rich_scan_result(scan_result, verbose=self.config.verbose)
+        else:
+            TerminalFormatter.print_scan_result(scan_result, verbose=self.config.verbose)
 
         # Trigger ReportManager and ScanHistoryManager integrations
         reports = {}

@@ -25,12 +25,11 @@ dist/
 # Local databases and runtime outputs
 .portfootprint_history.json
 *.log
-report.json
-report.csv
-report.html
-myreport.json
-myreport.csv
-myreport.html
+*.html
+*.json
+*.csv
+!config.json
+
 
 # Editor specific folders
 .vscode/
