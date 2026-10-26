@@ -7,19 +7,26 @@ import os
 import shlex
 import sys
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
-try:
+if TYPE_CHECKING:
     from rich.console import Console
     from rich.panel import Panel
     from rich.table import Table
 
-    RICH_AVAILABLE = True
-except ImportError:
-    Console = None  # type: ignore
-    Panel = None  # type: ignore
-    Table = None  # type: ignore
-    RICH_AVAILABLE = False
+    RICH_AVAILABLE: bool = True
+else:
+    try:
+        from rich.console import Console
+        from rich.panel import Panel
+        from rich.table import Table
+
+        RICH_AVAILABLE = True
+    except ImportError:
+        Console = None
+        Panel = None
+        Table = None
+        RICH_AVAILABLE = False
 
 from portfootprint.core.config import ScanConfiguration
 from portfootprint.core.defaults import (

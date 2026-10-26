@@ -4,15 +4,20 @@ Provides prompt_toolkit session with auto-completion, syntax highlighting, and h
 Falls back safely to standard input() if prompt_toolkit is unavailable.
 """
 
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
-try:
+if TYPE_CHECKING:
     from rich.console import Console
 
-    RICH_AVAILABLE = True
-except ImportError:
-    Console = None  # type: ignore
-    RICH_AVAILABLE = False
+    RICH_AVAILABLE: bool = True
+else:
+    try:
+        from rich.console import Console
+
+        RICH_AVAILABLE = True
+    except ImportError:
+        Console = None
+        RICH_AVAILABLE = False
 
 try:
     from prompt_toolkit import PromptSession

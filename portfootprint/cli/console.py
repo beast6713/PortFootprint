@@ -4,14 +4,20 @@ Coordinates banner rendering, diagnostic checks, and shell REPL loop.
 """
 
 import sys
+from typing import TYPE_CHECKING
 
-try:
+if TYPE_CHECKING:
     from rich.console import Console
 
-    RICH_AVAILABLE = True
-except ImportError:
-    Console = None  # type: ignore
-    RICH_AVAILABLE = False
+    RICH_AVAILABLE: bool = True
+else:
+    try:
+        from rich.console import Console
+
+        RICH_AVAILABLE = True
+    except ImportError:
+        Console = None
+        RICH_AVAILABLE = False
 
 from portfootprint.cli.banner import PortFootprintBanner
 from portfootprint.cli.commands import build_default_command_registry

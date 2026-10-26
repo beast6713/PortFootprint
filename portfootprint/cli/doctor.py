@@ -6,17 +6,23 @@ Validates socket subsystems, network capabilities, protocols registry, and repor
 import socket
 import subprocess
 import sys
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
-try:
+if TYPE_CHECKING:
     from rich.console import Console
     from rich.table import Table
 
-    RICH_AVAILABLE = True
-except ImportError:
-    Console = None  # type: ignore
-    Table = None  # type: ignore
-    RICH_AVAILABLE = False
+    RICH_AVAILABLE: bool = True
+else:
+    try:
+        from rich.console import Console
+        from rich.table import Table
+
+        RICH_AVAILABLE = True
+    except ImportError:
+        Console = None
+        Table = None
+        RICH_AVAILABLE = False
 
 
 class DoctorDiagnostic:
