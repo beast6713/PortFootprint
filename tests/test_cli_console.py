@@ -2,7 +2,8 @@
 Unit and integration tests for the PortFootprint Interactive CLI, Banner, Doctor, and Commands.
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
 import pytest
 
 from portfootprint.cli.banner import PortFootprintBanner
@@ -10,10 +11,7 @@ from portfootprint.cli.commands import (
     ClearCommand,
     CommandContext,
     CommandParser,
-    CompareCommand,
     DoctorCommand,
-    ExitCommand,
-    HelpCommand,
     HistoryCommand,
     LocalCommand,
     QuickCommand,
@@ -21,12 +19,9 @@ from portfootprint.cli.commands import (
     VersionCommand,
     build_default_command_registry,
 )
-from portfootprint.cli.console import PortFootprintConsole, launch_console
 from portfootprint.cli.doctor import DoctorDiagnostic
 from portfootprint.cli.formatter import TerminalFormatter
-from portfootprint.cli.shell import PortFootprintShell
 from portfootprint.core.models import HostResult, PortResult, ScanResult, ServiceMetadata
-from portfootprint.core.version import __version__
 from portfootprint.main import main
 
 
@@ -79,10 +74,10 @@ def test_version_command() -> None:
 def test_clear_command() -> None:
     """Verifies clear command runs."""
     cmd = ClearCommand()
-    with patch("os.system") as mock_sys:
+    with patch("sys.stdout.write") as mock_write:
         res = cmd.execute(CommandContext(raw_line="clear", command_name="clear"), console=None)
         assert res == 0
-        mock_sys.assert_called_once()
+        mock_write.assert_called_once()
 
 
 def test_help_command() -> None:
@@ -97,7 +92,12 @@ def test_help_command() -> None:
     assert help_cmd.execute(CommandContext(raw_line="help scan", command_name="help", args=["scan"]), console=None) == 0
 
     # Unknown command help
-    assert help_cmd.execute(CommandContext(raw_line="help nonexistent", command_name="help", args=["nonexistent"]), console=None) == 1
+    assert (
+        help_cmd.execute(
+            CommandContext(raw_line="help nonexistent", command_name="help", args=["nonexistent"]), console=None
+        )
+        == 1
+    )
 
 
 def test_doctor_command() -> None:
@@ -121,7 +121,9 @@ def test_quick_command() -> None:
 
     # Valid target
     with patch("portfootprint.core.orchestrator.ScanManager.execute") as mock_exec:
-        res = cmd.execute(CommandContext(raw_line="quick localhost", command_name="quick", args=["localhost"]), console=None)
+        res = cmd.execute(
+            CommandContext(raw_line="quick localhost", command_name="quick", args=["localhost"]), console=None
+        )
         assert res == 0
         mock_exec.assert_called_once()
 
@@ -129,8 +131,10 @@ def test_quick_command() -> None:
 def test_local_command() -> None:
     """Verifies LocalCommand detects ports and triggers scan."""
     cmd = LocalCommand()
-    with patch("portfootprint.cli.doctor.DoctorDiagnostic.detect_local_listening_ports", return_value=[80, 443]), \
-         patch("portfootprint.core.orchestrator.ScanManager.execute") as mock_exec:
+    with (
+        patch("portfootprint.cli.doctor.DoctorDiagnostic.detect_local_listening_ports", return_value=[80, 443]),
+        patch("portfootprint.core.orchestrator.ScanManager.execute") as mock_exec,
+    ):
         res = cmd.execute(CommandContext(raw_line="local", command_name="local"), console=None)
         assert res == 0
         mock_exec.assert_called_once()
@@ -148,7 +152,7 @@ def test_scan_command() -> None:
             raw_line="scan 127.0.0.1 -p 80 --threads 10",
             command_name="scan",
             args=["127.0.0.1"],
-            options={"p": "80", "threads": "10"}
+            options={"p": "80", "threads": "10"},
         )
         res = cmd.execute(ctx, console=None)
         assert res == 0
@@ -160,8 +164,13 @@ def test_terminal_formatter_rich_scan_result() -> None:
     port = PortResult(port=80, state="OPEN", service=ServiceMetadata(service_name="HTTP", title="My App"))
     host = HostResult(target="localhost", ip_address="127.0.0.1", ports=[port])
     result = ScanResult(
-        target="localhost", resolved_ip="127.0.0.1", total_ports=1,
-        hosts=[host], start_time=0.0, end_time=1.0, duration=1.0
+        target="localhost",
+        resolved_ip="127.0.0.1",
+        total_ports=1,
+        hosts=[host],
+        start_time=0.0,
+        end_time=1.0,
+        duration=1.0,
     )
     # Should run cleanly
     TerminalFormatter.print_rich_scan_result(result, verbose=True)
@@ -176,8 +185,10 @@ def test_main_subcommands() -> None:
     assert exc.value.code == 0
 
     # Subcommand: history
-    with patch("sys.argv", ["main.py", "history"]), \
-         patch("portfootprint.core.history.ScanHistoryManager.get_history", return_value=[]), \
-         pytest.raises(SystemExit) as exc:
+    with (
+        patch("sys.argv", ["main.py", "history"]),
+        patch("portfootprint.core.history.ScanHistoryManager.get_history", return_value=[]),
+        pytest.raises(SystemExit) as exc,
+    ):
         main()
     assert exc.value.code == 0

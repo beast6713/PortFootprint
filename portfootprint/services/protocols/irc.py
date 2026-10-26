@@ -17,6 +17,7 @@ class IrcFingerprinter(BaseFingerprintModule):
     IRC Fingerprinting module.
     Pulls initial auth lines and registers nicknames to verify server versions.
     """
+
     def fingerprint(self, sock: socket.socket, target: str, port: int, timeout: float) -> ServiceMetadata:
         original_timeout = sock.gettimeout()
         sock.settimeout(timeout)
@@ -70,9 +71,5 @@ class IrcFingerprinter(BaseFingerprintModule):
         banner_str = banner_text if is_irc else ""
 
         return ServiceMetadata(
-            service_name=service_name,
-            protocol="tcp",
-            version=version_str,
-            banner=banner_str,
-            extra_details=extra
+            service_name=service_name, protocol="tcp", version=version_str, banner=banner_str, extra_details=extra
         )

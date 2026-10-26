@@ -16,6 +16,7 @@ class ReportManager:
     Orchestrates report generation across multiple format requirements.
     Resolves targets using the ExportRegistry interface.
     """
+
     def __init__(self, requested_reports: dict[str, str]) -> None:
         # Dictionary mapping format name (e.g. 'json') to file destination path
         self.requested_reports = requested_reports
@@ -40,8 +41,16 @@ class ReportManager:
 
                 # 3. Safeguard against writing to critical system directories
                 forbidden_prefixes = [
-                    "/etc", "/bin", "/sbin", "/boot", "/dev", "/sys", "/proc", "/lib",
-                    "C:\\Windows", "C:\\SystemVolumeInformation"
+                    "/etc",
+                    "/bin",
+                    "/sbin",
+                    "/boot",
+                    "/dev",
+                    "/sys",
+                    "/proc",
+                    "/lib",
+                    "C:\\Windows",
+                    "C:\\SystemVolumeInformation",
                 ]
                 for prefix in forbidden_prefixes:
                     if real_path.startswith(prefix) or real_path.lower().startswith(prefix.lower()):

@@ -19,5 +19,5 @@ __all__ = [
     "HttpsFingerprinter",
     "IrcFingerprinter",
     "SmtpFingerprinter",
-    "SshFingerprinter"
+    "SshFingerprinter",
 ]

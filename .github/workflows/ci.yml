@@ -62,7 +62,7 @@ jobs:
         run: bandit -r portfootprint/ -ll -ii
 
       - name: Scan Third-Party Supply Chain (pip-audit)
-        run: pip-audit
+        run: pip-audit -r requirements.txt
 
   test-matrix:
     name: Verification Matrix (${{ matrix.os }} - Python ${{ matrix.python-version }})

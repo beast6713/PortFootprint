@@ -18,6 +18,7 @@ class ScanHistoryManager:
     Manages loading and appending scan execution run metrics to a local history log.
     Saves history to a local JSON file inside the working directory.
     """
+
     def __init__(self, history_file: str = ".portfootprint_history.json") -> None:
         if "\x00" in history_file:
             raise ValueError("Null bytes are not allowed in history file paths.")
@@ -25,8 +26,16 @@ class ScanHistoryManager:
         real_path = os.path.realpath(abs_path)
 
         forbidden_prefixes = [
-            "/etc", "/bin", "/sbin", "/boot", "/dev", "/sys", "/proc", "/lib",
-            "C:\\Windows", "C:\\SystemVolumeInformation"
+            "/etc",
+            "/bin",
+            "/sbin",
+            "/boot",
+            "/dev",
+            "/sys",
+            "/proc",
+            "/lib",
+            "C:\\Windows",
+            "C:\\SystemVolumeInformation",
         ]
         for prefix in forbidden_prefixes:
             if real_path.startswith(prefix) or real_path.lower().startswith(prefix.lower()):
@@ -68,9 +77,9 @@ class ScanHistoryManager:
                 "closed": stats.closed_count,
                 "filtered": stats.filtered_count,
                 "unknown": stats.unknown_count,
-                "services_detected": stats.services_detected
+                "services_detected": stats.services_detected,
             },
-            "reports": report_paths
+            "reports": report_paths,
         }
 
         history.append(entry)

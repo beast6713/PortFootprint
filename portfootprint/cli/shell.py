@@ -4,11 +4,11 @@ Provides prompt_toolkit session with auto-completion, syntax highlighting, and h
 Falls back safely to standard input() if prompt_toolkit is unavailable.
 """
 
-import sys
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 try:
     from rich.console import Console
+
     RICH_AVAILABLE = True
 except ImportError:
     Console = None  # type: ignore
@@ -20,32 +20,47 @@ try:
     from prompt_toolkit.completion import WordCompleter
     from prompt_toolkit.history import InMemoryHistory
     from prompt_toolkit.styles import Style
+
     PROMPT_TOOLKIT_AVAILABLE = True
 except ImportError:
     PROMPT_TOOLKIT_AVAILABLE = False
 
-from portfootprint.cli.commands import BaseCommand, CommandContext, CommandParser
+from portfootprint.cli.commands import BaseCommand, CommandParser
 
 
 class PortFootprintShell:
     """Manages the interactive REPL shell session."""
 
-    def __init__(self, registry: Dict[str, BaseCommand], console: Optional[Any] = None) -> None:
+    def __init__(self, registry: dict[str, BaseCommand], console: Optional[Any] = None) -> None:
         self.registry = registry
         self.console = console or (Console() if RICH_AVAILABLE else None)
 
         if PROMPT_TOOLKIT_AVAILABLE:
-            words = list(registry.keys()) + [
-                "--ports", "-p", "--threads", "-t", "--timeout", "-w",
-                "--all-reports", "--html", "--json", "--csv", "--verbose",
-                "localhost", "127.0.0.1", "scanme.nmap.org"
+            words = [
+                *list(registry.keys()),
+                "--ports",
+                "-p",
+                "--threads",
+                "-t",
+                "--timeout",
+                "-w",
+                "--all-reports",
+                "--html",
+                "--json",
+                "--csv",
+                "--verbose",
+                "localhost",
+                "127.0.0.1",
+                "scanme.nmap.org",
             ]
             self.completer = WordCompleter(words, ignore_case=True)
-            self.style = Style.from_dict({
-                "prompt": "bold #00ffff",
-                "arrow": "bold #ff00ff",
-            })
-            self.session = PromptSession(
+            self.style = Style.from_dict(
+                {
+                    "prompt": "bold #00ffff",
+                    "arrow": "bold #ff00ff",
+                }
+            )
+            self.session: Any = PromptSession(
                 history=InMemoryHistory(),
                 completer=self.completer,
                 auto_suggest=AutoSuggestFromHistory(),
@@ -63,7 +78,7 @@ class PortFootprintShell:
                         ("class:prompt", "portfootprint"),
                         ("class:arrow", " > "),
                     ]
-                    user_input = self.session.prompt(prompt_msg)
+                    user_input = str(self.session.prompt(prompt_msg))
                 else:
                     user_input = input("portfootprint > ")
 
@@ -83,7 +98,11 @@ class PortFootprintShell:
                 if cmd_obj:
                     cmd_obj.execute(ctx, console=self.console)
                 else:
-                    msg = f"[bold red][!] Unknown command: '{ctx.command_name}'. Type 'help' for command list.[/bold red]" if (self.console and RICH_AVAILABLE) else f"[!] Unknown command: '{ctx.command_name}'. Type 'help' for command list."
+                    msg = (
+                        f"[bold red][!] Unknown command: '{ctx.command_name}'. Type 'help' for command list.[/bold red]"
+                        if (self.console and RICH_AVAILABLE)
+                        else f"[!] Unknown command: '{ctx.command_name}'. Type 'help' for command list."
+                    )
                     if self.console and RICH_AVAILABLE:
                         self.console.print(msg)
                     else:
@@ -98,7 +117,11 @@ class PortFootprintShell:
             except SystemExit:
                 return 0
             except Exception as e:
-                msg = f"[bold red][!] Runtime Error: {e}[/bold red]" if (self.console and RICH_AVAILABLE) else f"[!] Runtime Error: {e}"
+                msg = (
+                    f"[bold red][!] Runtime Error: {e}[/bold red]"
+                    if (self.console and RICH_AVAILABLE)
+                    else f"[!] Runtime Error: {e}"
+                )
                 if self.console and RICH_AVAILABLE:
                     self.console.print(msg)
                 else:

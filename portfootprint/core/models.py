@@ -9,6 +9,7 @@ from typing import Any, Optional
 @dataclass(frozen=True)
 class ServiceMetadata:
     """Represents protocol-specific fingerprinting details for a service."""
+
     service_name: str
     protocol: str = "tcp"
     version: str = ""
@@ -22,6 +23,7 @@ class ServiceMetadata:
 @dataclass(frozen=True)
 class PortResult:
     """Represents the scan results of a single destination port."""
+
     port: int
     state: str
     reason: str = ""
@@ -32,6 +34,7 @@ class PortResult:
 @dataclass(frozen=True)
 class HostResult:
     """Represents the accumulated scanning state of a target host."""
+
     target: str
     ip_address: str
     ports: list[PortResult] = field(default_factory=list)
@@ -40,6 +43,7 @@ class HostResult:
 @dataclass(frozen=True)
 class ScanResult:
     """Represents the global metrics of a port scan execution run."""
+
     target: str
     resolved_ip: str
     total_ports: int

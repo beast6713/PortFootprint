@@ -26,6 +26,4 @@ def validate_is_float(val: Any, name: str) -> float:
 def validate_range(val: float, min_val: float, max_val: float, name: str) -> None:
     """Ensures value sits within boundaries."""
     if not (min_val <= val <= max_val):
-        raise ConfigurationError(
-            f"Parameter '{name}' value {val} must stand between {min_val} and {max_val}."
-        )
+        raise ConfigurationError(f"Parameter '{name}' value {val} must stand between {min_val} and {max_val}.")

@@ -11,6 +11,7 @@ from portfootprint.core.models import ScanResult
 @dataclass(frozen=True)
 class ScanStatistics:
     """Stores calculated performance and status metrics from a scan run."""
+
     total_ports: int
     open_count: int
     closed_count: int
@@ -68,5 +69,5 @@ class ScanStatistics:
             unknown_count=unknown_count,
             scan_speed=scan_speed,
             services_detected=services_detected,
-            most_common_protocol=most_common_protocol
+            most_common_protocol=most_common_protocol,
         )

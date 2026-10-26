@@ -17,6 +17,7 @@ class BaseFingerprintModule(ABC):
     Abstract interface for all protocol-specific fingerprinting modules.
     Provides utility methods to send requests and decode socket responses.
     """
+
     @abstractmethod
     def fingerprint(self, sock: socket.socket, target: str, port: int, timeout: float) -> ServiceMetadata:
         """
@@ -38,11 +39,7 @@ class BaseFingerprintModule(ABC):
                 return ""
 
     def send_and_recv(
-        self,
-        sock: socket.socket,
-        payload: bytes,
-        read_timeout: float = 2.0,
-        max_bytes: int = 2048
+        self, sock: socket.socket, payload: bytes, read_timeout: float = 2.0, max_bytes: int = 2048
     ) -> bytes:
         """
         Sends payload and attempts to read returned bytes with specified timeout.

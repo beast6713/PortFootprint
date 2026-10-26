@@ -102,7 +102,7 @@ def test_https_fingerprinter(mock_create_context: MagicMock) -> None:
         "subject": ((("commonName", "localhost"),),),
         "issuer": ((("commonName", "CA Issuer"),),),
         "serialNumber": "12345",
-        "notAfter": "Jan 01 2027"
+        "notAfter": "Jan 01 2027",
     }
 
     mock_socket = MagicMock()
@@ -132,10 +132,7 @@ def test_ftp_fingerprinter() -> None:
     """Verifies FTP greeting versions and FEAT features checks."""
     mock_socket = MagicMock()
     # Mock passive banner, then FEAT response
-    mock_socket.recv.side_effect = [
-        b"220 vsFTPd 3.0.3 Server\r\n",
-        b"211-Features:\r\n EPRT\r\n EPSV\r\n211 End\r\n"
-    ]
+    mock_socket.recv.side_effect = [b"220 vsFTPd 3.0.3 Server\r\n", b"211-Features:\r\n EPRT\r\n EPSV\r\n211 End\r\n"]
 
     fingerprinter = FtpFingerprinter()
     meta = fingerprinter.fingerprint(mock_socket, target="localhost", port=21, timeout=1.0)
@@ -150,7 +147,7 @@ def test_smtp_fingerprinter() -> None:
     mock_socket = MagicMock()
     mock_socket.recv.side_effect = [
         b"220 mail.local ESMTP Postfix\r\n",
-        b"250-mail.local\r\n250-STARTTLS\r\n250 PIPELINING\r\n"
+        b"250-mail.local\r\n250-STARTTLS\r\n250 PIPELINING\r\n",
     ]
 
     fingerprinter = SmtpFingerprinter()

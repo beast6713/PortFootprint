@@ -19,6 +19,7 @@ class ScanWorker:
     Executes a single port scan task.
     Updates the progress tracker and registers output with the aggregator.
     """
+
     def __init__(
         self,
         connection_handler: ConnectionHandler,
@@ -26,7 +27,7 @@ class ScanWorker:
         result_aggregator: ResultAggregator,
         timeout: float,
         retries: int,
-        verbose: bool = False
+        verbose: bool = False,
     ) -> None:
         self.connection_handler = connection_handler
         self.progress_tracker = progress_tracker
@@ -45,11 +46,7 @@ class ScanWorker:
             logger.debug(f"Starting connection scan on port {port}...")
 
         try:
-            result = self.connection_handler.scan_port(
-                port=port,
-                timeout=self.timeout,
-                retries=self.retries
-            )
+            result = self.connection_handler.scan_port(port=port, timeout=self.timeout, retries=self.retries)
 
             # Phase 2: If port is OPEN, run service discovery handshakes
             if result.state == "OPEN":
@@ -70,10 +67,7 @@ class ScanWorker:
                     banner = grabber.grab(sock)
 
                     # Run target identification detector
-                    detector = ServiceDetector(
-                        target=self.result_aggregator.target,
-                        timeout=self.timeout
-                    )
+                    detector = ServiceDetector(target=self.result_aggregator.target, timeout=self.timeout)
                     result = detector.detect(result, sock, banner)
                 except Exception as e:
                     logger.debug(f"Service detection connection failed on port {port}: {e!s}")
@@ -93,11 +87,7 @@ class ScanWorker:
         except Exception as e:
             logger.exception(f"Unexpected error scanning port {port}: {e!s}")
             # Return unknown error result
-            fallback = PortResult(
-                port=port,
-                state="UNKNOWN",
-                reason=f"Scan error: {e!s}"
-            )
+            fallback = PortResult(port=port, state="UNKNOWN", reason=f"Scan error: {e!s}")
             self.result_aggregator.add_port_result(fallback)
             return fallback
         finally:

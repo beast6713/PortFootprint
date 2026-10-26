@@ -36,7 +36,7 @@ def dummy_scan_result() -> ScanResult:
         hosts=[host],
         start_time=100.0,
         end_time=102.0,
-        duration=2.0
+        duration=2.0,
     )
 
 
@@ -62,8 +62,14 @@ def test_scan_history_manager(tmp_path) -> None:
     manager = ScanHistoryManager(history_file=str(history_file))
 
     stats = ScanStatistics(
-        total_ports=10, open_count=2, closed_count=8, filtered_count=0,
-        unknown_count=0, scan_speed=5.0, services_detected=1, most_common_protocol="SSH"
+        total_ports=10,
+        open_count=2,
+        closed_count=8,
+        filtered_count=0,
+        unknown_count=0,
+        scan_speed=5.0,
+        services_detected=1,
+        most_common_protocol="SSH",
     )
 
     # Verify initial retrieval is empty
@@ -87,24 +93,32 @@ def test_scan_comparer(tmp_path) -> None:
     old_data = {
         "target": "localhost",
         "start_time": 100.0,
-        "hosts": [{
-            "ports": [
-                {"port": 22, "state": "OPEN", "service": {"service_name": "SSH", "version": "8.0"}},
-                {"port": 80, "state": "OPEN", "service": {"service_name": "HTTP", "version": "2.4"}}
-            ]
-        }]
+        "hosts": [
+            {
+                "ports": [
+                    {"port": 22, "state": "OPEN", "service": {"service_name": "SSH", "version": "8.0"}},
+                    {"port": 80, "state": "OPEN", "service": {"service_name": "HTTP", "version": "2.4"}},
+                ]
+            }
+        ],
     }
 
     new_data = {
         "target": "localhost",
         "start_time": 105.0,
-        "hosts": [{
-            "ports": [
-                {"port": 22, "state": "OPEN", "service": {"service_name": "SSH", "version": "8.2"}}, # Changed version
-                {"port": 80, "state": "CLOSED"}, # Removed
-                {"port": 443, "state": "OPEN", "service": {"service_name": "HTTPS", "version": "1.3"}} # Added
-            ]
-        }]
+        "hosts": [
+            {
+                "ports": [
+                    {
+                        "port": 22,
+                        "state": "OPEN",
+                        "service": {"service_name": "SSH", "version": "8.2"},
+                    },  # Changed version
+                    {"port": 80, "state": "CLOSED"},  # Removed
+                    {"port": 443, "state": "OPEN", "service": {"service_name": "HTTPS", "version": "1.3"}},  # Added
+                ]
+            }
+        ],
     }
 
     with open(old_report, "w", encoding="utf-8") as f:

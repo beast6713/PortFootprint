@@ -27,8 +27,7 @@ def setup_logging(verbose: bool = False, log_file: Optional[str] = None) -> None
 
     if verbose:
         stream_formatter = logging.Formatter(
-            "[%(asctime)s] [%(threadName)s] [%(levelname)s] %(name)s - %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S"
+            "[%(asctime)s] [%(threadName)s] [%(levelname)s] %(name)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
         )
     else:
         stream_formatter = logging.Formatter("[*] %(message)s")
@@ -42,8 +41,7 @@ def setup_logging(verbose: bool = False, log_file: Optional[str] = None) -> None
             file_handler = logging.FileHandler(log_file, encoding="utf-8")
             file_handler.setLevel(logging.DEBUG)
             file_formatter = logging.Formatter(
-                "%(asctime)s [%(threadName)s] [%(levelname)s] %(name)s - %(message)s",
-                datefmt="%Y-%m-%d %H:%M:%S"
+                "%(asctime)s [%(threadName)s] [%(levelname)s] %(name)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
             )
             file_handler.setFormatter(file_formatter)
             root_logger.addHandler(file_handler)

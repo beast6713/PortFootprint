@@ -7,12 +7,13 @@ import os
 import shlex
 import sys
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 try:
     from rich.console import Console
     from rich.panel import Panel
     from rich.table import Table
+
     RICH_AVAILABLE = True
 except ImportError:
     Console = None  # type: ignore
@@ -34,10 +35,11 @@ from portfootprint.core.version import __version__
 @dataclass
 class CommandContext:
     """Encapsulates a parsed command call."""
+
     raw_line: str
     command_name: str
-    args: List[str] = field(default_factory=list)
-    options: Dict[str, Any] = field(default_factory=dict)
+    args: list[str] = field(default_factory=list)
+    options: dict[str, Any] = field(default_factory=dict)
 
 
 class CommandParser:
@@ -60,8 +62,8 @@ class CommandParser:
         cmd_name = tokens[0].lower()
         raw_args = tokens[1:]
 
-        args: List[str] = []
-        options: Dict[str, Any] = {}
+        args: list[str] = []
+        options: dict[str, Any] = {}
 
         i = 0
         while i < len(raw_args):
@@ -91,11 +93,12 @@ class CommandParser:
 
 class BaseCommand:
     """Base class for all console commands."""
+
     name: str = ""
     description: str = ""
     syntax: str = ""
-    aliases: List[str] = []
-    examples: List[str] = []
+    aliases: tuple[str, ...] = ()
+    examples: tuple[str, ...] = ()
 
     def execute(self, context: CommandContext, console: Optional[Any] = None) -> int:
         raise NotImplementedError
@@ -103,16 +106,17 @@ class BaseCommand:
 
 class ScanCommand(BaseCommand):
     """Executes a configurable TCP port scan and service fingerprint."""
+
     name = "scan"
     description = "Scan a target host with custom ports, threads, and reports"
     syntax = "scan <target> [-p PORTS] [-t THREADS] [-w TIMEOUT] [--all-reports] [--html FILE] [--verbose]"
-    aliases = ["run", "s"]
-    examples = [
+    aliases = ("run", "s")
+    examples = (
         "scan 127.0.0.1",
         "scan 127.0.0.1 -p 80,443,3306",
         "scan scanme.nmap.org -p 20-100 --threads 50",
         "scan 127.0.0.1 -p 1-65535 --all-reports",
-    ]
+    )
 
     def execute(self, context: CommandContext, console: Optional[Any] = None) -> int:
         if not context.args:
@@ -127,6 +131,7 @@ class ScanCommand(BaseCommand):
 
         # Ports
         from portfootprint.scanner.port_parser import PortParser
+
         port_parser = PortParser()
         raw_ports = opts.get("ports") or opts.get("p")
         ports = port_parser.parse(raw_ports) if raw_ports else DEFAULT_PORTS_LIST
@@ -174,11 +179,12 @@ class ScanCommand(BaseCommand):
 
 class QuickCommand(BaseCommand):
     """Executes a quick top-ports scan on a target."""
+
     name = "quick"
     description = "Quickly scan the top common service ports on a target"
     syntax = "quick <target> [--all-reports]"
-    aliases = ["q", "fast"]
-    examples = ["quick localhost", "quick scanme.nmap.org --all-reports"]
+    aliases = ("q", "fast")
+    examples = ("quick localhost", "quick scanme.nmap.org --all-reports")
 
     def execute(self, context: CommandContext, console: Optional[Any] = None) -> int:
         if not context.args:
@@ -218,11 +224,12 @@ class QuickCommand(BaseCommand):
 
 class LocalCommand(BaseCommand):
     """Detects all open listening ports on the machine and fingerprints them automatically."""
+
     name = "local"
     description = "Auto-discover active listening ports on this machine and scan them"
     syntax = "local [--all-reports] [--html FILE]"
-    aliases = ["listen", "mine"]
-    examples = ["local", "local --all-reports", "local --html local_ports.html"]
+    aliases = ("listen", "mine")
+    examples = ("local", "local --all-reports", "local --html local_ports.html")
 
     def execute(self, context: CommandContext, console: Optional[Any] = None) -> int:
         from portfootprint.cli.doctor import DoctorDiagnostic
@@ -242,8 +249,10 @@ class LocalCommand(BaseCommand):
 
         ports_str = ",".join(str(p) for p in ports)
         if console and RICH_AVAILABLE:
-            console.print(f"[bold green][+] Detected {len(ports)} listening ports:[/bold green] [dim white]{ports_str}[/dim white]")
-            console.print(f"[cyan][*] Fingerprinting services on 127.0.0.1...[/cyan]\n")
+            console.print(
+                f"[bold green][+] Detected {len(ports)} listening ports:[/bold green] [dim white]{ports_str}[/dim white]"
+            )
+            console.print("[cyan][*] Fingerprinting services on 127.0.0.1...[/cyan]\n")
         else:
             print(f"[+] Detected {len(ports)} listening ports: {ports_str}")
             print("[*] Fingerprinting services on 127.0.0.1...\n")
@@ -278,14 +287,16 @@ class LocalCommand(BaseCommand):
 
 class HistoryCommand(BaseCommand):
     """Displays previous scan execution history."""
+
     name = "history"
     description = "View previous scan execution history and exported reports"
     syntax = "history"
-    aliases = ["hist", "log"]
-    examples = ["history"]
+    aliases = ("hist", "log")
+    examples = ("history",)
 
     def execute(self, context: CommandContext, console: Optional[Any] = None) -> int:
         from portfootprint.core.history import ScanHistoryManager
+
         hm = ScanHistoryManager()
         history = hm.get_history()
 
@@ -317,12 +328,7 @@ class HistoryCommand(BaseCommand):
                 rep_str = ", ".join(rep_links) if rep_links else "None"
 
                 table.add_row(
-                    ts,
-                    target,
-                    str(s.get("open", 0)),
-                    str(s.get("closed", 0)),
-                    str(s.get("total_ports", 0)),
-                    rep_str
+                    ts, target, str(s.get("open", 0)), str(s.get("closed", 0)), str(s.get("total_ports", 0)), rep_str
                 )
 
             console.print(table)
@@ -334,7 +340,9 @@ class HistoryCommand(BaseCommand):
             for entry in history:
                 s = entry.get("summary", {})
                 print(f"[{entry.get('timestamp')}] Target: {entry.get('target')}")
-                print(f"  Summary: Total {s.get('total_ports', 0)} | Open {s.get('open', 0)} | Closed {s.get('closed', 0)}")
+                print(
+                    f"  Summary: Total {s.get('total_ports', 0)} | Open {s.get('open', 0)} | Closed {s.get('closed', 0)}"
+                )
             print("=" * 60)
 
         return 0
@@ -342,11 +350,12 @@ class HistoryCommand(BaseCommand):
 
 class CompareCommand(BaseCommand):
     """Compares two JSON scan reports to detect changes."""
+
     name = "compare"
     description = "Compare two JSON scan reports to discover newly opened/closed ports"
     syntax = "compare <old_report.json> <new_report.json>"
-    aliases = ["diff"]
-    examples = ["compare old_scan.json new_scan.json"]
+    aliases = ("diff",)
+    examples = ("compare old_scan.json new_scan.json",)
 
     def execute(self, context: CommandContext, console: Optional[Any] = None) -> int:
         if len(context.args) < 2:
@@ -375,27 +384,30 @@ class CompareCommand(BaseCommand):
 
 class DoctorCommand(BaseCommand):
     """Runs environment, socket, and system health checks."""
+
     name = "doctor"
     description = "Run diagnostic health checks on networking and system components"
     syntax = "doctor"
-    aliases = ["status", "check"]
-    examples = ["doctor"]
+    aliases = ("status", "check")
+    examples = ("doctor",)
 
     def execute(self, context: CommandContext, console: Optional[Any] = None) -> int:
         from portfootprint.cli.doctor import DoctorDiagnostic
+
         DoctorDiagnostic.run_diagnostics(console=console)
         return 0
 
 
 class HelpCommand(BaseCommand):
     """Displays command help and usage."""
+
     name = "help"
     description = "List all available commands or view help for a specific command"
     syntax = "help [command]"
-    aliases = ["?", "h"]
-    examples = ["help", "help scan", "help local", "help quick"]
+    aliases = ("?", "h")
+    examples = ("help", "help scan", "help local", "help quick")
 
-    def __init__(self, registry: Dict[str, BaseCommand]) -> None:
+    def __init__(self, registry: dict[str, BaseCommand]) -> None:
         self.registry = registry
 
     def execute(self, context: CommandContext, console: Optional[Any] = None) -> int:
@@ -451,7 +463,9 @@ class HelpCommand(BaseCommand):
                 table.add_row(cmd.name, cmd.description, cmd.syntax)
 
             console.print(table)
-            console.print('\n[dim white]Type "[bold cyan]help <command>[/bold cyan]" for syntax details & examples.[/dim white]\n')
+            console.print(
+                '\n[dim white]Type "[bold cyan]help <command>[/bold cyan]" for syntax details & examples.[/dim white]\n'
+            )
         else:
             print("=" * 60)
             print("PortFootprint Interactive Commands")
@@ -469,27 +483,30 @@ class HelpCommand(BaseCommand):
 
 class ClearCommand(BaseCommand):
     """Clears the terminal display."""
+
     name = "clear"
     description = "Clear the terminal display screen"
     syntax = "clear"
-    aliases = ["cls"]
-    examples = ["clear"]
+    aliases = ("cls",)
+    examples = ("clear",)
 
     def execute(self, context: CommandContext, console: Optional[Any] = None) -> int:
         if console and RICH_AVAILABLE:
             console.clear()
         else:
-            os.system("cls" if sys.platform == "win32" else "clear")
+            sys.stdout.write("\033[H\033[2J")
+            sys.stdout.flush()
         return 0
 
 
 class VersionCommand(BaseCommand):
     """Displays framework release version."""
+
     name = "version"
     description = "Display PortFootprint framework version"
     syntax = "version"
-    aliases = ["ver", "-V", "--version"]
-    examples = ["version"]
+    aliases = ("ver", "-V", "--version")
+    examples = ("version",)
 
     def execute(self, context: CommandContext, console: Optional[Any] = None) -> int:
         msg = f"PortFootprint Framework v{__version__}"
@@ -502,11 +519,12 @@ class VersionCommand(BaseCommand):
 
 class ExitCommand(BaseCommand):
     """Exits the interactive console."""
+
     name = "exit"
     description = "Exit the PortFootprint interactive console"
     syntax = "exit"
-    aliases = ["quit", "q"]
-    examples = ["exit"]
+    aliases = ("quit", "q")
+    examples = ("exit",)
 
     def execute(self, context: CommandContext, console: Optional[Any] = None) -> int:
         if console and RICH_AVAILABLE:
@@ -516,9 +534,9 @@ class ExitCommand(BaseCommand):
         sys.exit(0)
 
 
-def build_default_command_registry() -> Dict[str, BaseCommand]:
+def build_default_command_registry() -> dict[str, BaseCommand]:
     """Builds and returns the default command registry."""
-    reg: Dict[str, BaseCommand] = {
+    reg: dict[str, BaseCommand] = {
         "scan": ScanCommand(),
         "quick": QuickCommand(),
         "local": LocalCommand(),

@@ -16,18 +16,19 @@ class DnsFingerprinter(BaseFingerprintModule):
     DNS Fingerprinting module.
     Submits a mock TCP DNS query and verifies the response header transaction ID.
     """
+
     def fingerprint(self, sock: socket.socket, target: str, port: int, timeout: float) -> ServiceMetadata:
         # Standard DNS query for example.com A record over TCP
         # RFC 1035: TCP query is prefixed with 2-byte length
         dns_query = (
-            b"\x00\x1d"                # 2-byte Length prefix (29 bytes query)
-            b"\x12\x34"                # Transaction ID: 0x1234
-            b"\x01\x00"                # Flags: Standard query, recursion desired
-            b"\x00\x01"                # Questions count: 1
-            b"\x00\x00\x00\x00\x00\x00" # Answer/Authority/Additional count: 0
+            b"\x00\x1d"  # 2-byte Length prefix (29 bytes query)
+            b"\x12\x34"  # Transaction ID: 0x1234
+            b"\x01\x00"  # Flags: Standard query, recursion desired
+            b"\x00\x01"  # Questions count: 1
+            b"\x00\x00\x00\x00\x00\x00"  # Answer/Authority/Additional count: 0
             b"\x07example\x03com\x00"  # Query Name: example.com
-            b"\x00\x01"                # Type: A record (1)
-            b"\x00\x01"                # Class: IN class (1)
+            b"\x00\x01"  # Type: A record (1)
+            b"\x00\x01"  # Class: IN class (1)
         )
 
         response = self.send_and_recv(sock, dns_query, read_timeout=timeout)
@@ -51,9 +52,5 @@ class DnsFingerprinter(BaseFingerprintModule):
         banner = "Standard DNS Resolver" if is_dns else ""
 
         return ServiceMetadata(
-            service_name=service_name,
-            protocol="tcp",
-            version=version,
-            banner=banner,
-            extra_details=extra
+            service_name=service_name, protocol="tcp", version=version, banner=banner, extra_details=extra
         )

@@ -13,6 +13,7 @@ class TargetResolver:
     Validates host formats and resolves hostnames to active IP addresses.
     Raises TargetResolutionError for resolution or format issues.
     """
+
     @staticmethod
     def is_valid_ip(address: str) -> bool:
         """Determines if the input is a valid IPv4 or IPv6 address structure."""
@@ -44,8 +45,10 @@ class TargetResolver:
         # Regex check for label structures
         # Each label is 1-63 chars, containing alphanumeric and hyphens.
         # Cannot start or end with hyphen.
-        allowed = re.compile(r"^(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])"
-                             r"(?:\.(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9]))*$")
+        allowed = re.compile(
+            r"^(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])"
+            r"(?:\.(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9]))*$"
+        )
         return bool(allowed.match(hostname))
 
     def resolve(self, target: str) -> tuple[str, socket.AddressFamily]:
@@ -97,10 +100,6 @@ class TargetResolver:
             return ip, addr_info[0][0]
 
         except socket.gaierror as e:
-            raise TargetResolutionError(
-                f"Failed to resolve target hostname '{cleaned_target}': {e.strerror}"
-            ) from e
+            raise TargetResolutionError(f"Failed to resolve target hostname '{cleaned_target}': {e.strerror}") from e
         except Exception as e:
-            raise TargetResolutionError(
-                f"Unexpected resolution error for target '{cleaned_target}': {e!s}"
-            ) from e
+            raise TargetResolutionError(f"Unexpected resolution error for target '{cleaned_target}': {e!s}") from e

@@ -18,6 +18,7 @@ class CsvReportExporter(BaseReportExporter):
     CSV Exporter.
     Generates flat tables of scanned ports.
     """
+
     def export(self, scan_result: ScanResult, output_path: str) -> None:
         headers = ["Port", "State", "Protocol", "Version", "Banner", "Service Name"]
 
@@ -40,14 +41,7 @@ class CsvReportExporter(BaseReportExporter):
                             ver = s.version
                             banner = s.banner
 
-                        writer.writerow([
-                            port.port,
-                            port.state,
-                            proto,
-                            ver,
-                            banner,
-                            srv_name
-                        ])
+                        writer.writerow([port.port, port.state, proto, ver, banner, srv_name])
             logger.info(f"CSV report successfully exported to '{output_path}'.")
         except OSError as e:
             logger.exception(f"Failed to write CSV report to '{output_path}': {e!s}")

@@ -16,6 +16,7 @@ class SshFingerprinter(BaseFingerprintModule):
     SSH Fingerprinting module.
     Parses protocol version and software implementation version from SSH greeting.
     """
+
     def fingerprint(self, sock: socket.socket, target: str, port: int, timeout: float) -> ServiceMetadata:
         # Passive read or active read can be fetched from the banner grabber,
         # but let's read/verify on the socket directly if we don't have it.
@@ -53,16 +54,12 @@ class SshFingerprinter(BaseFingerprintModule):
         extra = {
             "raw_banner": banner_text,
             "ssh_protocol_version": protocol_version,
-            "ssh_software_version": software_version
+            "ssh_software_version": software_version,
         }
 
         # Use software version as service version identifier
         version = software_version
 
         return ServiceMetadata(
-            service_name="SSH",
-            protocol="tcp",
-            version=version,
-            banner=banner_text,
-            extra_details=extra
+            service_name="SSH", protocol="tcp", version=version, banner=banner_text, extra_details=extra
         )

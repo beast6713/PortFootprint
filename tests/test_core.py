@@ -93,6 +93,7 @@ def test_scan_manager_execution(mock_scheduler_class: MagicMock, mock_resolver_c
     config = ScanConfiguration(target="localhost", ports=[80, 443])
 
     from portfootprint.core.orchestrator import ScanManager
+
     manager = ScanManager(config)
 
     # Execute orchestrator

@@ -25,14 +25,9 @@ def test_cli_parser_defaults() -> None:
 def test_cli_parser_custom_values() -> None:
     """Verifies parsing of custom parameter arguments."""
     parser = CommandLineParser()
-    config = parser.parse_args([
-        "scanme.nmap.org",
-        "-p", "80,443",
-        "--threads", "50",
-        "--timeout", "1.5",
-        "--retries", "2",
-        "--verbose"
-    ])
+    config = parser.parse_args(
+        ["scanme.nmap.org", "-p", "80,443", "--threads", "50", "--timeout", "1.5", "--retries", "2", "--verbose"]
+    )
 
     assert config.target == "scanme.nmap.org"
     assert config.ports == [80, 443]

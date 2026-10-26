@@ -20,6 +20,7 @@ class ScanConfiguration:
     Scan configurations object holding runtime properties.
     Ensures safe constraints validation during construction.
     """
+
     target: str
     ports: list[int] = field(default_factory=list)
     threads: int = 20
@@ -45,9 +46,7 @@ class ScanConfiguration:
 
         # Validate threads range
         if not (MIN_THREADS_LIMIT <= self.threads <= MAX_THREADS_LIMIT):
-            raise ConfigurationError(
-                f"Thread count must be between {MIN_THREADS_LIMIT} and {MAX_THREADS_LIMIT}."
-            )
+            raise ConfigurationError(f"Thread count must be between {MIN_THREADS_LIMIT} and {MAX_THREADS_LIMIT}.")
 
         # Validate timeout value
         if self.timeout <= 0.0:
@@ -63,9 +62,7 @@ class ScanConfiguration:
 
         for port in self.ports:
             if not (MIN_PORT <= port <= MAX_PORT):
-                raise ConfigurationError(
-                    f"Port number {port} is out of valid range ({MIN_PORT}-{MAX_PORT})."
-                )
+                raise ConfigurationError(f"Port number {port} is out of valid range ({MIN_PORT}-{MAX_PORT}).")
 
     @classmethod
     def load_config_file(cls, path: str = "config.json") -> dict[str, Any]:
@@ -75,6 +72,7 @@ class ScanConfiguration:
         """
         import json
         import os
+
         if os.path.exists(path):
             try:
                 with open(path, encoding="utf-8") as f:

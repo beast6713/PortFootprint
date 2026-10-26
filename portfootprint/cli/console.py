@@ -4,10 +4,10 @@ Coordinates banner rendering, diagnostic checks, and shell REPL loop.
 """
 
 import sys
-from typing import Optional
 
 try:
     from rich.console import Console
+
     RICH_AVAILABLE = True
 except ImportError:
     Console = None  # type: ignore

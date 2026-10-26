@@ -12,6 +12,7 @@ class ExportRegistry:
     Registry for dynamic report format exporters.
     Allows format exporters to self-register.
     """
+
     def __init__(self) -> None:
         self._exporters: dict[str, type[BaseReportExporter]] = {}
 
@@ -19,9 +20,11 @@ class ExportRegistry:
         """
         Decorator registering an exporter class under specified format name.
         """
+
         def decorator(cls: type[BaseReportExporter]) -> type[BaseReportExporter]:
             self._exporters[format_name.lower()] = cls
             return cls
+
         return decorator
 
     def get_exporter(self, format_name: str) -> type[BaseReportExporter]:

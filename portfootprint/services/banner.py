@@ -14,6 +14,7 @@ class BannerGrabber:
     Grabs network service banners passively and actively.
     Decodes received bytes safely using UTF-8/Latin-1 fallback protocols.
     """
+
     def __init__(self, read_timeout: float = 2.0) -> None:
         self.read_timeout = read_timeout
 

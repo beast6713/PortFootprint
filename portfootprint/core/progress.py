@@ -11,6 +11,7 @@ class ProgressTracker:
     Coordinates status metrics across concurrent threads.
     Provides utility methods to track and retrieve scan state safely.
     """
+
     def __init__(self, total_tasks: int, on_step_callback: Optional[Callable[[], None]] = None) -> None:
         self.total_tasks = total_tasks
         self.completed_tasks = 0
@@ -46,8 +47,5 @@ class ProgressTracker:
                 "total": self.total_tasks,
                 "completed": self.completed_tasks,
                 "active_workers": self.active_workers,
-                "percent": (
-                    (self.completed_tasks / self.total_tasks * 100.0)
-                    if self.total_tasks > 0 else 0.0
-                )
+                "percent": ((self.completed_tasks / self.total_tasks * 100.0) if self.total_tasks > 0 else 0.0),
             }

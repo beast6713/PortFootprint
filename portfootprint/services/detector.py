@@ -18,6 +18,7 @@ class ServiceDetector:
     Coordinates service identification for verified open ports.
     Dispatches open sockets to matching registry fingerprinters.
     """
+
     def __init__(self, target: str, timeout: float) -> None:
         self.target = target
         self.timeout = timeout
@@ -41,7 +42,7 @@ class ServiceDetector:
             6379: "Redis",
             6667: "IRC",
             8080: "HTTP",
-            27017: "MongoDB"
+            27017: "MongoDB",
         }
         return mapping.get(port, "Unknown Service")
 
@@ -59,12 +60,7 @@ class ServiceDetector:
             try:
                 fingerprinter = cls()
                 logger.debug(f"Attempting fingerprint on port {port} using {cls.__name__}...")
-                metadata = fingerprinter.fingerprint(
-                    sock=sock,
-                    target=self.target,
-                    port=port,
-                    timeout=self.timeout
-                )
+                metadata = fingerprinter.fingerprint(sock=sock, target=self.target, port=port, timeout=self.timeout)
 
                 # Check if it successfully identified a service (not unknown fallback)
                 if metadata and metadata.service_name != "Unknown Service":
@@ -76,12 +72,7 @@ class ServiceDetector:
         # Fallback if no fingerprinter yielded positive results
         if not service_metadata:
             fallback_name = self._get_fallback_service_name(port)
-            service_metadata = ServiceMetadata(
-                service_name=fallback_name,
-                protocol="tcp",
-                version="",
-                banner=banner
-            )
+            service_metadata = ServiceMetadata(service_name=fallback_name, protocol="tcp", version="", banner=banner)
 
         # Return updated PortResult
         return PortResult(
@@ -89,5 +80,5 @@ class ServiceDetector:
             state=port_result.state,
             reason=port_result.reason,
             duration=port_result.duration,
-            service=service_metadata
+            service=service_metadata,
         )

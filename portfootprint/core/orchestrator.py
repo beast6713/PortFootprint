@@ -24,6 +24,7 @@ class ScanManager:
     Coordinates target lookup, resource initialization, threading scheduling,
     and progress rendering across the scanning execution pipeline.
     """
+
     def __init__(self, config: ScanConfiguration) -> None:
         self.config = config
         self.resolver = TargetResolver()
@@ -46,16 +47,12 @@ class ScanManager:
             target=self.config.target,
             resolved_ip=resolved_ip,
             total_ports=len(self.config.ports),
-            threads=self.config.threads
+            threads=self.config.threads,
         )
 
         # 3. Setup aggregators & progress trackers
         total_ports = len(self.config.ports)
-        aggregator = ResultAggregator(
-            target=self.config.target,
-            resolved_ip=resolved_ip,
-            total_ports_count=total_ports
-        )
+        aggregator = ResultAggregator(target=self.config.target, resolved_ip=resolved_ip, total_ports_count=total_ports)
 
         # We hook a progress update callback inside the tracker initialization
         def progress_callback() -> None:
@@ -76,7 +73,7 @@ class ScanManager:
             result_aggregator=aggregator,
             timeout=self.config.timeout,
             retries=self.config.retries,
-            verbose=self.config.verbose
+            verbose=self.config.verbose,
         )
 
         # 4. Trigger Scheduler scanning process
@@ -116,6 +113,7 @@ class ScanManager:
         if reports:
             try:
                 from portfootprint.reports.report_manager import ReportManager
+
                 rm = ReportManager(reports)
                 rm.generate_reports(scan_result)
             except Exception as e:
@@ -124,6 +122,7 @@ class ScanManager:
         try:
             from portfootprint.core.history import ScanHistoryManager
             from portfootprint.core.statistics import ScanStatistics
+
             stats = ScanStatistics.calculate(scan_result)
             history_manager = ScanHistoryManager()
             history_manager.add_entry(self.config.target, stats, reports)

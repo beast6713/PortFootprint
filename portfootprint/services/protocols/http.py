@@ -10,12 +10,15 @@ from portfootprint.services.protocols.base import BaseFingerprintModule
 from portfootprint.services.registry import registry
 
 
-@registry.register(ports=[80, 8080, 8000, 8888], keywords=["http", "html", "nginx", "apache", "iis", "jetty"], priority=10)
+@registry.register(
+    ports=[80, 8080, 8000, 8888], keywords=["http", "html", "nginx", "apache", "iis", "jetty"], priority=10
+)
 class HttpFingerprinter(BaseFingerprintModule):
     """
     HTTP Fingerprinting module.
     Pulls headers, redirection paths, server tags, and page titles.
     """
+
     def _parse_headers(self, response_text: str) -> dict[str, str]:
         headers: dict[str, str] = {}
         # Find header block before double CRLF
@@ -102,5 +105,5 @@ class HttpFingerprinter(BaseFingerprintModule):
             banner=server,
             headers=headers,
             title=title,
-            extra_details=extra
+            extra_details=extra,
         )

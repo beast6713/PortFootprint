@@ -10,22 +10,29 @@ class ProtocolRegistry:
     Manages registered protocol fingerprint modules.
     Matches modules based on port numbers, banner keywords, and priority constraints.
     """
+
     def __init__(self) -> None:
         # Holds registered protocols configuration maps
         self._entries: list[dict[str, Any]] = []
 
-    def register(self, ports: Optional[list[int]] = None, keywords: Optional[list[str]] = None, priority: int = 10) -> Any:
+    def register(
+        self, ports: Optional[list[int]] = None, keywords: Optional[list[str]] = None, priority: int = 10
+    ) -> Any:
         """
         Decorator registering a fingerprinter class.
         """
+
         def decorator(cls: type[Any]) -> type[Any]:
-            self._entries.append({
-                "class": cls,
-                "ports": ports or [],
-                "keywords": [kw.lower() for kw in (keywords or [])],
-                "priority": priority
-            })
+            self._entries.append(
+                {
+                    "class": cls,
+                    "ports": ports or [],
+                    "keywords": [kw.lower() for kw in (keywords or [])],
+                    "priority": priority,
+                }
+            )
             return cls
+
         return decorator
 
     def get_candidates(self, port: int, banner: str) -> list[type[Any]]:

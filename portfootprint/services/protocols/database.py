@@ -12,12 +12,15 @@ from portfootprint.services.protocols.base import BaseFingerprintModule
 from portfootprint.services.registry import registry
 
 
-@registry.register(ports=[3306, 5432, 6379, 27017], keywords=["mysql", "postgres", "redis", "mongodb", "ping"], priority=10)
+@registry.register(
+    ports=[3306, 5432, 6379, 27017], keywords=["mysql", "postgres", "redis", "mongodb", "ping"], priority=10
+)
 class DatabaseFingerprinter(BaseFingerprintModule):
     """
     Database Fingerprinting module.
     Runs non-intrusive handshakes for MySQL, PostgreSQL, Redis, and MongoDB.
     """
+
     def _fingerprint_mysql(self, sock: socket.socket, timeout: float) -> Optional[ServiceMetadata]:
         # MySQL immediately sends a greeting packet (passive)
         original_timeout = sock.gettimeout()
@@ -49,7 +52,7 @@ class DatabaseFingerprinter(BaseFingerprintModule):
                 protocol="tcp",
                 version=version,
                 banner=banner,
-                extra_details={"mysql_version": version}
+                extra_details={"mysql_version": version},
             )
         return None
 
@@ -64,7 +67,7 @@ class DatabaseFingerprinter(BaseFingerprintModule):
 
         if resp in (b"S", b"N"):
             is_postgres = True
-            extra["ssl_supported"] = (resp == b"S")
+            extra["ssl_supported"] = resp == b"S"
 
             # Send StartupMessage to provoke an auth request/error containing Postgres tag
             # StartupMessage: len (28) + protocol version 3.0 + parameters (user=postgres)
@@ -84,7 +87,7 @@ class DatabaseFingerprinter(BaseFingerprintModule):
                 protocol="tcp",
                 version="PostgreSQL Database Server",
                 banner="PostgreSQL",
-                extra_details=extra
+                extra_details=extra,
             )
         return None
 
@@ -107,25 +110,25 @@ class DatabaseFingerprinter(BaseFingerprintModule):
                 protocol="tcp",
                 version="Redis Key-Value Store",
                 banner=extra["redis_response"],
-                extra_details=extra
+                extra_details=extra,
             )
         return None
 
     def _fingerprint_mongodb(self, sock: socket.socket, timeout: float) -> Optional[ServiceMetadata]:
         # MongoDB: send standard OP_QUERY isMaster payload (59 bytes)
         mongo_probe = (
-            b"\x3b\x00\x00\x00"          # Message length (59 bytes)
-            b"\x01\x00\x00\x00"          # Request ID
-            b"\x00\x00\x00\x00"          # Response To
-            b"\xd4\x07\x00\x00"          # Opcode OP_QUERY (2004)
-            b"\x00\x00\x00\x00"          # Query Flags
-            b"admin.$cmd\x00"             # Collection name
-            b"\x00\x00\x00\x00"          # Number to skip
-            b"\xff\xff\xff\xff"          # Number to return (-1)
+            b"\x3b\x00\x00\x00"  # Message length (59 bytes)
+            b"\x01\x00\x00\x00"  # Request ID
+            b"\x00\x00\x00\x00"  # Response To
+            b"\xd4\x07\x00\x00"  # Opcode OP_QUERY (2004)
+            b"\x00\x00\x00\x00"  # Query Flags
+            b"admin.$cmd\x00"  # Collection name
+            b"\x00\x00\x00\x00"  # Number to skip
+            b"\xff\xff\xff\xff"  # Number to return (-1)
             # Query document: {"isMaster": 1}
-            b"\x13\x00\x00\x00"          # Document length (19 bytes)
+            b"\x13\x00\x00\x00"  # Document length (19 bytes)
             b"\x10isMaster\x00\x01\x00\x00\x00"  # Int32 key:value
-            b"\x00"                      # End of document
+            b"\x00"  # End of document
         )
 
         resp_bytes = self.send_and_recv(sock, mongo_probe, read_timeout=timeout)
@@ -150,7 +153,7 @@ class DatabaseFingerprinter(BaseFingerprintModule):
                 protocol="tcp",
                 version="MongoDB NoSQL Database Server",
                 banner="MongoDB OP_REPLY response",
-                extra_details=extra
+                extra_details=extra,
             )
         return None
 
@@ -174,7 +177,12 @@ class DatabaseFingerprinter(BaseFingerprintModule):
                 return res
 
         # Fallback sequential checks if port wasn't standard but matched banner keywords
-        for func in (self._fingerprint_mysql, self._fingerprint_redis, self._fingerprint_postgres, self._fingerprint_mongodb):
+        for func in (
+            self._fingerprint_mysql,
+            self._fingerprint_redis,
+            self._fingerprint_postgres,
+            self._fingerprint_mongodb,
+        ):
             try:
                 res = func(sock, timeout)
                 if res:
@@ -187,5 +195,5 @@ class DatabaseFingerprinter(BaseFingerprintModule):
             service_name="Database",
             protocol="tcp",
             version="Generic Database",
-            banner="Unrecognized database handshakes"
+            banner="Unrecognized database handshakes",
         )

@@ -14,6 +14,7 @@ class ScanComparer:
     Compares two JSON scan reports to discover changes in port states and services.
     Useful for highlighting security changes or unauthorized open service vectors.
     """
+
     def _load_report(self, file_path: str) -> dict[str, Any]:
         try:
             with open(file_path, encoding="utf-8") as f:
@@ -39,7 +40,7 @@ class ScanComparer:
                     open_ports[p] = {
                         "service_name": srv.get("service_name", "Unknown"),
                         "version": srv.get("version", ""),
-                        "banner": srv.get("banner", "")
+                        "banner": srv.get("banner", ""),
                     }
         return open_ports
 
@@ -60,33 +61,27 @@ class ScanComparer:
         # Find new/changed ports
         for p, new_meta in new_open.items():
             if p not in old_open:
-                added.append({
-                    "port": p,
-                    "service_name": new_meta["service_name"],
-                    "version": new_meta["version"]
-                })
+                added.append({"port": p, "service_name": new_meta["service_name"], "version": new_meta["version"]})
             else:
                 old_meta = old_open[p]
                 srv_changed = old_meta["service_name"] != new_meta["service_name"]
                 ver_changed = old_meta["version"] != new_meta["version"]
 
                 if srv_changed or ver_changed:
-                    changed.append({
-                        "port": p,
-                        "old_service": old_meta["service_name"],
-                        "new_service": new_meta["service_name"],
-                        "old_version": old_meta["version"],
-                        "new_version": new_meta["version"]
-                    })
+                    changed.append(
+                        {
+                            "port": p,
+                            "old_service": old_meta["service_name"],
+                            "new_service": new_meta["service_name"],
+                            "old_version": old_meta["version"],
+                            "new_version": new_meta["version"],
+                        }
+                    )
 
         # Find removed ports (open previously, but closed/filtered now)
         for p, old_meta in old_open.items():
             if p not in new_open:
-                removed.append({
-                    "port": p,
-                    "service_name": old_meta["service_name"],
-                    "version": old_meta["version"]
-                })
+                removed.append({"port": p, "service_name": old_meta["service_name"], "version": old_meta["version"]})
 
         return {
             "old_target": old_data.get("target", "Unknown"),
@@ -95,5 +90,5 @@ class ScanComparer:
             "new_timestamp": new_data.get("start_time", 0.0),
             "added": sorted(added, key=lambda x: x["port"]),
             "removed": sorted(removed, key=lambda x: x["port"]),
-            "changed": sorted(changed, key=lambda x: x["port"])
+            "changed": sorted(changed, key=lambda x: x["port"]),
         }

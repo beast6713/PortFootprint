@@ -16,6 +16,7 @@ class SmtpFingerprinter(BaseFingerprintModule):
     SMTP Fingerprinting module.
     Pulls mail banners, sends EHLO, and parses SMTP extension keywords.
     """
+
     def fingerprint(self, sock: socket.socket, target: str, port: int, timeout: float) -> ServiceMetadata:
         original_timeout = sock.gettimeout()
         sock.settimeout(timeout)
@@ -51,7 +52,7 @@ class SmtpFingerprinter(BaseFingerprintModule):
             "raw_banner": banner_text,
             "ehlo_response": ehlo_text,
             "smtp_extensions": extensions,
-            "starttls_support": starttls_supported
+            "starttls_support": starttls_supported,
         }
 
         # Restore original timeout settings
@@ -59,9 +60,5 @@ class SmtpFingerprinter(BaseFingerprintModule):
             sock.settimeout(original_timeout)
 
         return ServiceMetadata(
-            service_name="SMTP",
-            protocol="tcp",
-            version="SMTP Mail Server",
-            banner=banner_text,
-            extra_details=extra
+            service_name="SMTP", protocol="tcp", version="SMTP Mail Server", banner=banner_text, extra_details=extra
         )

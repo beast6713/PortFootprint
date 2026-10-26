@@ -5,12 +5,13 @@ Modeled after professional interactive security consoles.
 
 import os
 import sys
-from typing import Any, Optional, Tuple
+from typing import Any, Optional
 
 try:
     from rich.console import Console
     from rich.panel import Panel
     from rich.table import Table
+
     RICH_AVAILABLE = True
 except ImportError:
     Console = None  # type: ignore
@@ -27,10 +28,10 @@ class PortFootprintBanner:
     ASCII_ART = r"""
 ██████╗  ██████╗ ██████╗ ████████╗███████╗ ██████╗  ██████╗ ████████╗
 ██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝██╔════╝██╔═══██╗██╔═══██╗╚══██╔══╝
-██████╔╝██║   ██║██████╔╝   ██║   █████╗  ██║   ██║██║   ██║   ██║   
-██╔═══╝ ██║   ██║██╔══██╗   ██║   ██╔══╝  ██║   ██║██║   ██║   ██║   
-██║     ╚██████╔╝██║  ██║   ██║   ██║     ╚██████╔╝╚██████╔╝   ██║   
-╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝      ╚═════╝  ╚═════╝    ╚═╝   
+██████╔╝██║   ██║██████╔╝   ██║   █████╗  ██║   ██║██║   ██║   ██║
+██╔═══╝ ██║   ██║██╔══██╗   ██║   ██╔══╝  ██║   ██║██║   ██║   ██║
+██║     ╚██████╔╝██║  ██║   ██║   ██║     ╚██████╔╝╚██████╔╝   ██║
+╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝      ╚═════╝  ╚═════╝    ╚═╝
 """
 
     @classmethod
@@ -40,6 +41,7 @@ class PortFootprintBanner:
         try:
             import portfootprint.services.protocols  # noqa: F401
             from portfootprint.services.registry import registry
+
             protocols_count = len(registry._entries)
         except Exception:
             protocols_count = 11
@@ -47,6 +49,7 @@ class PortFootprintBanner:
         # 2. Exporters
         try:
             from portfootprint.reports.registry import export_registry
+
             exporters_count = len(export_registry.list_formats()) or 3
         except Exception:
             exporters_count = 3
@@ -54,6 +57,7 @@ class PortFootprintBanner:
         # 3. History records
         try:
             from portfootprint.core.history import ScanHistoryManager
+
             hm = ScanHistoryManager()
             history_count = len(hm.get_history())
         except Exception:
@@ -79,11 +83,15 @@ class PortFootprintBanner:
             console.print(f"Release Version   : [bold white]{__version__}[/bold white]")
             console.print(f"Python Runtime    : [bold white]{py_ver}[/bold white]")
             console.print(f"Active Workspace  : [bold yellow]{workspace_display}[/bold yellow]")
-            console.print(f"Protocols Loaded  : [bold green]{protocols}[/bold green] (HTTP, HTTPS, SSH, MySQL, Postgres, Redis, etc.)")
+            console.print(
+                f"Protocols Loaded  : [bold green]{protocols}[/bold green] (HTTP, HTTPS, SSH, MySQL, Postgres, Redis, etc.)"
+            )
             console.print(f"Exporters Ready   : [bold green]{exporters}[/bold green] (JSON, CSV, HTML Dashboard)")
             console.print(f"History Logged    : [bold cyan]{history_count}[/bold cyan] previous scans recorded")
             console.print("[dim cyan]──────────────────────────────────────────────────────────────────[/dim cyan]")
-            console.print('Type "[bold cyan]help[/bold cyan]" for command list, "[bold green]local[/bold green]" to scan open ports, or "[bold red]exit[/bold red]" to quit.\n')
+            console.print(
+                'Type "[bold cyan]help[/bold cyan]" for command list, "[bold green]local[/bold green]" to scan open ports, or "[bold red]exit[/bold red]" to quit.\n'
+            )
         else:
             print(cls.ASCII_ART)
             print("        PORTFOOTPRINT TCP SCANNER & FINGERPRINTING ENGINE")

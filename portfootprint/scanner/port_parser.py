@@ -2,7 +2,6 @@
 PortParser utility parsing ranges, lists, and values into verified unique ports.
 """
 
-
 from portfootprint.core.constants import MAX_PORT, MIN_PORT
 from portfootprint.core.exceptions import InvalidPortError
 
@@ -12,12 +11,11 @@ class PortParser:
     Parses CLI port input strings into a sorted, unique list of integers.
     Supports single values, comma-separated lists, and hyphenated ranges.
     """
+
     @staticmethod
     def _validate_port_range(port: int) -> None:
         if not (MIN_PORT <= port <= MAX_PORT):
-            raise InvalidPortError(
-                f"Port number {port} is out of bounds. Valid ranges: {MIN_PORT}-{MAX_PORT}."
-            )
+            raise InvalidPortError(f"Port number {port} is out of bounds. Valid ranges: {MIN_PORT}-{MAX_PORT}.")
 
     def parse(self, port_str: str) -> list[int]:
         """
@@ -48,14 +46,10 @@ class PortParser:
                     start_port = int(start_str)
                     end_port = int(end_str)
                 except ValueError as e:
-                    raise InvalidPortError(
-                        f"Non-numeric values in port range: '{part}'."
-                    ) from e
+                    raise InvalidPortError(f"Non-numeric values in port range: '{part}'.") from e
 
                 if start_port > end_port:
-                    raise InvalidPortError(
-                        f"Port range start ({start_port}) cannot be greater than end ({end_port})."
-                    )
+                    raise InvalidPortError(f"Port range start ({start_port}) cannot be greater than end ({end_port}).")
 
                 self._validate_port_range(start_port)
                 self._validate_port_range(end_port)

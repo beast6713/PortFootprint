@@ -17,6 +17,7 @@ class ScanScheduler:
     Coordinates multi-threaded port scans.
     Submits port tasks to ThreadPoolExecutor and handles interrupts.
     """
+
     def __init__(self, threads: int) -> None:
         self.threads = threads
         self._executor: Optional[concurrent.futures.ThreadPoolExecutor] = None

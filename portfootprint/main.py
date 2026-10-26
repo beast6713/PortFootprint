@@ -5,7 +5,6 @@ Supports direct scanning flags, high-level subcommands, and interactive console 
 
 import logging
 import sys
-from typing import Optional
 
 from portfootprint.cli.parser import CommandLineParser
 from portfootprint.common.logging import setup_logging
@@ -34,11 +33,13 @@ def main() -> None:
     # 1. If running in an interactive terminal with no arguments, launch interactive console
     if not raw_args and sys.stdin.isatty():
         from portfootprint.cli.console import launch_console
+
         sys.exit(launch_console())
 
     # 2. Check for explicit console command
     if raw_args and raw_args[0].lower() in ("console", "interactive"):
         from portfootprint.cli.console import launch_console
+
         sys.exit(launch_console())
 
     # 3. Check for high-level convenience subcommands
@@ -48,8 +49,10 @@ def main() -> None:
         # Doctor health check
         if subcmd in ("doctor", "check"):
             from portfootprint.cli.doctor import DoctorDiagnostic
+
             try:
                 from rich.console import Console
+
                 c = Console()
             except ImportError:
                 c = None
@@ -59,33 +62,39 @@ def main() -> None:
         # Local open ports detection & scan
         if subcmd in ("local", "listen"):
             from portfootprint.cli.commands import CommandParser, LocalCommand
-            cmd = LocalCommand()
+
+            local_cmd = LocalCommand()
             ctx = CommandParser.parse(" ".join(raw_args))
             try:
                 from rich.console import Console
+
                 c = Console()
             except ImportError:
                 c = None
-            sys.exit(cmd.execute(ctx, console=c))
+            sys.exit(local_cmd.execute(ctx, console=c))
 
         # Quick scan on top ports
         if subcmd in ("quick", "fast"):
             from portfootprint.cli.commands import CommandParser, QuickCommand
-            cmd = QuickCommand()
+
+            quick_cmd = QuickCommand()
             ctx = CommandParser.parse(" ".join(raw_args))
             try:
                 from rich.console import Console
+
                 c = Console()
             except ImportError:
                 c = None
-            sys.exit(cmd.execute(ctx, console=c))
+            sys.exit(quick_cmd.execute(ctx, console=c))
 
         # History subcommand
         if subcmd == "history":
             from portfootprint.cli.commands import CommandContext, HistoryCommand
+
             h_cmd = HistoryCommand()
             try:
                 from rich.console import Console
+
                 c = Console()
             except ImportError:
                 c = None
@@ -111,11 +120,14 @@ def main() -> None:
         # Intercept History request
         if config.history:
             from portfootprint.core.history import ScanHistoryManager
+
             hm = ScanHistoryManager()
             history = hm.get_history()
             try:
                 from rich.console import Console
+
                 from portfootprint.cli.commands import CommandContext, HistoryCommand
+
                 hc = HistoryCommand()
                 hc.execute(CommandContext(raw_line="history", command_name="history"), console=Console())
             except ImportError:
@@ -127,10 +139,12 @@ def main() -> None:
                 else:
                     for entry in history:
                         print(f"[{entry['timestamp']}] Target: {entry['target']}")
-                        s = entry['summary']
-                        print(f"  Summary: Total {s['total_ports']} | Open {s['open']} | Filtered {s['filtered']} | Closed {s['closed']}")
-                        if entry['reports']:
-                            active_reps = [f"{k}: {v}" for k, v in entry['reports'].items() if v]
+                        s = entry["summary"]
+                        print(
+                            f"  Summary: Total {s['total_ports']} | Open {s['open']} | Filtered {s['filtered']} | Closed {s['closed']}"
+                        )
+                        if entry["reports"]:
+                            active_reps = [f"{k}: {v}" for k, v in entry["reports"].items() if v]
                             if active_reps:
                                 print(f"  Reports: {', '.join(active_reps)}")
                 print("=================================================")
@@ -140,6 +154,7 @@ def main() -> None:
         if config.compare:
             from portfootprint.cli.formatter import TerminalFormatter
             from portfootprint.core.comparison import ScanComparer
+
             old_path, new_path = config.compare
             comparer = ScanComparer()
             diff = comparer.compare_files(old_path, new_path)

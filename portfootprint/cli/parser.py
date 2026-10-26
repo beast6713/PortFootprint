@@ -23,6 +23,7 @@ class CommandLineParser:
     Parses and validates CLI arguments.
     Builds the corresponding ScanConfiguration dataclass.
     """
+
     def __init__(self, port_parser: Optional[PortParser] = None) -> None:
         self.port_parser = port_parser or PortParser()
         self.parser = self._build_parser()
@@ -31,88 +32,53 @@ class CommandLineParser:
         parser = argparse.ArgumentParser(
             prog="portfootprint",
             description="PortFootprint - A professional, dependency-free TCP Connect port scanner.",
-            add_help=True
+            add_help=True,
         )
 
-        parser.add_argument(
-            "target",
-            nargs="?",
-            help="Target hostname or IP address to scan."
-        )
+        parser.add_argument("target", nargs="?", help="Target hostname or IP address to scan.")
 
         parser.add_argument(
-            "-p", "--ports",
+            "-p",
+            "--ports",
             dest="ports",
             help="Ports specification (e.g. '80', '22,80,443', '20-100', '1-65535'). "
-                 "Defaults to common top ports if omitted."
+            "Defaults to common top ports if omitted.",
+        )
+
+        parser.add_argument("-t", "--threads", type=int, dest="threads", help="Number of worker threads.")
+
+        parser.add_argument("-w", "--timeout", type=float, dest="timeout", help="Socket timeout in seconds.")
+
+        parser.add_argument("-r", "--retries", type=int, dest="retries", help="Number of socket connect retries.")
+
+        parser.add_argument(
+            "-v", "--verbose", action="store_true", dest="verbose", help="Enable verbose output with logging details."
         )
 
         parser.add_argument(
-            "-t", "--threads",
-            type=int,
-            dest="threads",
-            help="Number of worker threads."
-        )
-
-        parser.add_argument(
-            "-w", "--timeout",
-            type=float,
-            dest="timeout",
-            help="Socket timeout in seconds."
-        )
-
-        parser.add_argument(
-            "-r", "--retries",
-            type=int,
-            dest="retries",
-            help="Number of socket connect retries."
-        )
-
-        parser.add_argument(
-            "-v", "--verbose",
-            action="store_true",
-            dest="verbose",
-            help="Enable verbose output with logging details."
-        )
-
-        parser.add_argument(
-            "-V", "--version",
+            "-V",
+            "--version",
             action="version",
             version=f"PortFootprint v{__version__}",
-            help="Print version information and exit."
+            help="Print version information and exit.",
         )
 
         # Reporting & Statistics Flags
-        parser.add_argument(
-            "--json",
-            dest="json_report",
-            help="Path to export the structured JSON report."
-        )
+        parser.add_argument("--json", dest="json_report", help="Path to export the structured JSON report.")
 
-        parser.add_argument(
-            "--csv",
-            dest="csv_report",
-            help="Path to export the flat CSV report."
-        )
+        parser.add_argument("--csv", dest="csv_report", help="Path to export the flat CSV report.")
 
-        parser.add_argument(
-            "--html",
-            dest="html_report",
-            help="Path to export the premium HTML report."
-        )
+        parser.add_argument("--html", dest="html_report", help="Path to export the premium HTML report.")
 
         parser.add_argument(
             "--all-reports",
             action="store_true",
             dest="all_reports",
-            help="Generates JSON, CSV, and HTML reports with default filenames."
+            help="Generates JSON, CSV, and HTML reports with default filenames.",
         )
 
         parser.add_argument(
-            "--history",
-            action="store_true",
-            dest="history",
-            help="Displays local scan history index records."
+            "--history", action="store_true", dest="history", help="Displays local scan history index records."
         )
 
         parser.add_argument(
@@ -120,14 +86,10 @@ class CommandLineParser:
             nargs=2,
             metavar=("OLD_JSON", "NEW_JSON"),
             dest="compare",
-            help="Compares two JSON scan reports to discover changes."
+            help="Compares two JSON scan reports to discover changes.",
         )
 
-        parser.add_argument(
-            "--log-file",
-            dest="log_file",
-            help="Path to save log files output."
-        )
+        parser.add_argument("--log-file", dest="log_file", help="Path to save log files output.")
 
         return parser
 
@@ -208,5 +170,5 @@ class CommandLineParser:
             all_reports=parsed.all_reports,
             history=parsed.history,
             compare=parsed.compare,
-            log_file=log_file
+            log_file=log_file,
         )

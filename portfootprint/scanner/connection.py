@@ -20,6 +20,7 @@ class ConnectionHandler:
     Manages low-level socket connections to verify TCP port accessibility.
     Determines port states (OPEN, CLOSED, FILTERED) and implements retries.
     """
+
     def __init__(self, ip_address: str, address_family: socket.AddressFamily = socket.AF_INET) -> None:
         self.ip_address = ip_address
         self.address_family = address_family
@@ -47,10 +48,7 @@ class ConnectionHandler:
                     sock.close()
                     elapsed = time.time() - start_time
                     return PortResult(
-                        port=port,
-                        state=PORT_STATUS_OPEN,
-                        reason="Connection succeeded",
-                        duration=elapsed
+                        port=port, state=PORT_STATUS_OPEN, reason="Connection succeeded", duration=elapsed
                     )
 
                 # Check errno status codes
@@ -79,9 +77,4 @@ class ConnectionHandler:
                 time.sleep(0.01)
 
         elapsed = time.time() - start_time
-        return PortResult(
-            port=port,
-            state=last_state,
-            reason=last_reason,
-            duration=elapsed
-        )
+        return PortResult(port=port, state=last_state, reason=last_reason, duration=elapsed)

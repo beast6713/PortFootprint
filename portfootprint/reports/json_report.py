@@ -20,6 +20,7 @@ class JsonReportExporter(BaseReportExporter):
     JSON Exporter.
     Generates structured JSON detailing hosts, scan metrics, and services.
     """
+
     def export(self, scan_result: ScanResult, output_path: str) -> None:
         stats = ScanStatistics.calculate(scan_result)
 
@@ -41,15 +42,11 @@ class JsonReportExporter(BaseReportExporter):
                 "services_detected": stats.services_detected,
                 "most_common_protocol": stats.most_common_protocol,
             },
-            "hosts": []
+            "hosts": [],
         }
 
         for host in scan_result.hosts:
-            host_data: dict[str, Any] = {
-                "target": host.target,
-                "ip_address": host.ip_address,
-                "ports": []
-            }
+            host_data: dict[str, Any] = {"target": host.target, "ip_address": host.ip_address, "ports": []}
 
             for port in host.ports:
                 port_data = {
@@ -57,7 +54,7 @@ class JsonReportExporter(BaseReportExporter):
                     "state": port.state,
                     "reason": port.reason,
                     "duration": port.duration,
-                    "service": None
+                    "service": None,
                 }
 
                 if port.service:
@@ -70,7 +67,7 @@ class JsonReportExporter(BaseReportExporter):
                         "headers": s.headers,
                         "certificate": s.certificate,
                         "title": s.title,
-                        "extra_details": s.extra_details
+                        "extra_details": s.extra_details,
                     }
                 host_data["ports"].append(port_data)
             report_data["hosts"].append(host_data)

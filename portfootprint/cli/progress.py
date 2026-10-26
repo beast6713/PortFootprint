@@ -10,6 +10,7 @@ class ConsoleProgressRenderer:
     """
     Renders terminal-friendly text progress indicators for scans.
     """
+
     def __init__(self, bar_width: int = 30) -> None:
         self.bar_width = bar_width
 
@@ -29,8 +30,7 @@ class ConsoleProgressRenderer:
 
         # Format string carriage return output
         sys.stdout.write(
-            f"\rScanning: [{bar}] {percent:.1f}% "
-            f"(Completed {completed}/{total}, {active} workers active)"
+            f"\rScanning: [{bar}] {percent:.1f}% " f"(Completed {completed}/{total}, {active} workers active)"
         )
         sys.stdout.flush()
 

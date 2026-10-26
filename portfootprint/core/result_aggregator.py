@@ -13,6 +13,7 @@ class ResultAggregator:
     Accumulates scanned port results from worker threads.
     Compiles HostResult and ScanResult structures upon completion.
     """
+
     def __init__(self, target: str, resolved_ip: str, total_ports_count: int) -> None:
         self.target = target
         self.resolved_ip = resolved_ip
@@ -42,11 +43,7 @@ class ResultAggregator:
         # Sort port results for consistent output
         sorted_ports = self.get_port_results()
 
-        host_res = HostResult(
-            target=self.target,
-            ip_address=self.resolved_ip,
-            ports=sorted_ports
-        )
+        host_res = HostResult(target=self.target, ip_address=self.resolved_ip, ports=sorted_ports)
 
         return ScanResult(
             target=self.target,
@@ -55,5 +52,5 @@ class ResultAggregator:
             hosts=[host_res],
             start_time=self.start_time,
             end_time=end_time,
-            duration=duration
+            duration=duration,
         )

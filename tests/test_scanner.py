@@ -38,6 +38,7 @@ def test_connection_handler_open_port(mock_socket_class: MagicMock) -> None:
 def test_connection_handler_closed_port(mock_socket_class: MagicMock) -> None:
     """Verifies that connection refusal returns a CLOSED port state."""
     import errno
+
     mock_socket = MagicMock()
     mock_socket_class.return_value = mock_socket
 
@@ -76,11 +77,7 @@ def test_scan_worker_execution() -> None:
     agg = ResultAggregator(target="localhost", resolved_ip="127.0.0.1", total_ports_count=1)
 
     worker = ScanWorker(
-        connection_handler=mock_handler,
-        progress_tracker=progress,
-        result_aggregator=agg,
-        timeout=1.0,
-        retries=0
+        connection_handler=mock_handler, progress_tracker=progress, result_aggregator=agg, timeout=1.0, retries=0
     )
 
     result = worker.execute(80)
@@ -108,6 +105,7 @@ def test_scan_scheduler_run() -> None:
 def test_connection_handler_timeout_errno(mock_socket_class: MagicMock) -> None:
     """Verifies that ETIMEDOUT errno returns a FILTERED port state."""
     import errno
+
     mock_socket = MagicMock()
     mock_socket_class.return_value = mock_socket
     mock_socket.connect_ex.return_value = errno.ETIMEDOUT
@@ -122,6 +120,7 @@ def test_connection_handler_timeout_errno(mock_socket_class: MagicMock) -> None:
 def test_connection_handler_os_error(mock_socket_class: MagicMock) -> None:
     """Verifies that generic socket OSError returns a CLOSED port state."""
     import errno
+
     mock_socket = MagicMock()
     mock_socket_class.return_value = mock_socket
     # Raise custom OSError
@@ -137,6 +136,7 @@ def test_connection_handler_os_error(mock_socket_class: MagicMock) -> None:
 def test_connection_handler_retries(mock_socket_class: MagicMock) -> None:
     """Verifies retries triggers sleep logic and reconnect attempts."""
     import errno
+
     mock_socket = MagicMock()
     mock_socket_class.return_value = mock_socket
     # Fail both attempts
@@ -168,11 +168,7 @@ def test_scan_worker_service_detection_exception() -> None:
     agg = ResultAggregator(target="localhost", resolved_ip="127.0.0.1", total_ports_count=1)
 
     worker = ScanWorker(
-        connection_handler=mock_handler,
-        progress_tracker=progress,
-        result_aggregator=agg,
-        timeout=1.0,
-        retries=0
+        connection_handler=mock_handler, progress_tracker=progress, result_aggregator=agg, timeout=1.0, retries=0
     )
 
     # Mock socket to raise OSError during socket instantiation inside execute
@@ -197,11 +193,7 @@ def test_scan_worker_unexpected_exception() -> None:
     agg = ResultAggregator(target="localhost", resolved_ip="127.0.0.1", total_ports_count=1)
 
     worker = ScanWorker(
-        connection_handler=mock_handler,
-        progress_tracker=progress,
-        result_aggregator=agg,
-        timeout=1.0,
-        retries=0
+        connection_handler=mock_handler, progress_tracker=progress, result_aggregator=agg, timeout=1.0, retries=0
     )
 
     result = worker.execute(80)

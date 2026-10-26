@@ -20,6 +20,7 @@ class HtmlReportExporter(BaseReportExporter):
     HTML Exporter.
     Outputs interactive dashboard reports with search filters and collapsible details.
     """
+
     def export(self, scan_result: ScanResult, output_path: str) -> None:
         stats = ScanStatistics.calculate(scan_result)
 
@@ -49,7 +50,7 @@ class HtmlReportExporter(BaseReportExporter):
                         "headers": s.headers,
                         "certificate": s.certificate,
                         "title": s.title,
-                        "extra_details": s.extra_details
+                        "extra_details": s.extra_details,
                     }
                     details_json = html.escape(json.dumps(details_dict, indent=2))
 

@@ -17,6 +17,7 @@ class FtpFingerprinter(BaseFingerprintModule):
     FTP Fingerprinting module.
     Pulls FTP greetings, parses software versions, and queries FEAT extensions.
     """
+
     def fingerprint(self, sock: socket.socket, target: str, port: int, timeout: float) -> ServiceMetadata:
         # FTP immediately outputs standard 220 banner upon connection
         original_timeout = sock.gettimeout()
@@ -32,8 +33,10 @@ class FtpFingerprinter(BaseFingerprintModule):
         # Parse version info from banner (e.g. VSFTPD x.x.x, ProFTPD x.x.x)
         version = "Unknown"
         if banner_text:
-            #VSFTPD, ProFTPD, Pure-FTPd etc.
-            match = re.search(r"(vsftpd|proftpd|pure-ftpd|war-ftpd|filezilla)[\s/]?([\d\.]+)?", banner_text, re.IGNORECASE)
+            # VSFTPD, ProFTPD, Pure-FTPd etc.
+            match = re.search(
+                r"(vsftpd|proftpd|pure-ftpd|war-ftpd|filezilla)[\s/]?([\d\.]+)?", banner_text, re.IGNORECASE
+            )
             if match:
                 version = match.group(2) if match.group(2) else match.group(1)
 
@@ -60,9 +63,5 @@ class FtpFingerprinter(BaseFingerprintModule):
             sock.settimeout(original_timeout)
 
         return ServiceMetadata(
-            service_name="FTP",
-            protocol="tcp",
-            version=version,
-            banner=banner_text,
-            extra_details=extra
+            service_name="FTP", protocol="tcp", version=version, banner=banner_text, extra_details=extra
         )

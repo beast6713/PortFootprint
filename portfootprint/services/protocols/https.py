@@ -21,6 +21,7 @@ class HttpsFingerprinter(BaseFingerprintModule):
     HTTPS/TLS Fingerprinting module.
     Wraps standard TCP socket into SSL wrapper and parses certificate fields.
     """
+
     def _format_cert_name(self, name_tuples: Any) -> str:
         if not name_tuples:
             return ""
@@ -74,7 +75,7 @@ class HttpsFingerprinter(BaseFingerprintModule):
                     "not_before": peercert.get("notBefore", ""),
                     "not_after": peercert.get("notAfter", ""),
                     "san": str(peercert.get("subjectAltName", "")),
-                    "self_signed": self._is_self_signed(subject_str, issuer_str)
+                    "self_signed": self._is_self_signed(subject_str, issuer_str),
                 }
 
             # Close SSL layer but keep basic socket open (since caller manages socket cleanup)
@@ -106,5 +107,5 @@ class HttpsFingerprinter(BaseFingerprintModule):
             version=version,
             banner=banner,
             certificate=cert_details,
-            extra_details=extra
+            extra_details=extra,
         )

@@ -14,6 +14,7 @@ class TerminalFormatter:
     Formats scan results into readable ASCII layouts for terminal stdout.
     Handles statistics display and scan history comparison layouts.
     """
+
     @staticmethod
     def print_banner() -> None:
         """Renders the top startup banner."""
@@ -72,11 +73,11 @@ class TerminalFormatter:
                             extra = f"Issuer: {issuer_val[:30]}"
 
                     print(
-                        f"{result.port}/tcp".ljust(15) +
-                        "OPEN".ljust(10) +
-                        f"{srv_name}".ljust(15) +
-                        f"{srv_ver}".ljust(20) +
-                        f"{extra}"
+                        f"{result.port}/tcp".ljust(15)
+                        + "OPEN".ljust(10)
+                        + f"{srv_name}".ljust(15)
+                        + f"{srv_ver}".ljust(20)
+                        + f"{extra}"
                     )
                 else:
                     print(f"{result.port}/tcp".ljust(15) + "OPEN")
@@ -124,7 +125,6 @@ class TerminalFormatter:
         """
         try:
             from rich.console import Console
-            from rich.panel import Panel
             from rich.table import Table
         except ImportError:
             cls.print_scan_result(scan_result, verbose=verbose)
