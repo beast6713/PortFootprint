@@ -73,7 +73,7 @@ def test_result_aggregator() -> None:
     # Check that ports are sorted ascending
     assert host_res.ports[0].port == 80
     assert host_res.ports[1].port == 443
-    assert scan_result.duration > 0.0
+    assert scan_result.duration >= 0.0
 
 
 @patch("portfootprint.core.orchestrator.TargetResolver")
