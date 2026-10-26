@@ -15,6 +15,7 @@ from portfootprint.cli.commands import (
     HistoryCommand,
     LocalCommand,
     QuickCommand,
+    ReportCommand,
     ScanCommand,
     VersionCommand,
     build_default_command_registry,
@@ -192,3 +193,86 @@ def test_main_subcommands() -> None:
     ):
         main()
     assert exc.value.code == 0
+
+    # Subcommand: report
+    with (
+        patch("sys.argv", ["main.py", "report", "html"]),
+        patch("portfootprint.cli.commands.webbrowser.open"),
+        pytest.raises(SystemExit) as exc,
+    ):
+        main()
+    assert exc.value.code == 0
+
+
+def test_report_command() -> None:
+    """Verifies ReportCommand catalog rendering, discovery, and selection logic."""
+    cmd = ReportCommand()
+    assert cmd.name == "report"
+    assert "reports" in cmd.aliases
+
+    # Test format catalog display without options (non-interactive in tests)
+    res = cmd.execute(CommandContext(raw_line="report", command_name="report"), console=None)
+    assert res == 0
+
+    # Test open non-existent file
+    res_missing = cmd.execute(
+        CommandContext(
+            raw_line="report open non_existent.html", command_name="report", args=["open", "non_existent.html"]
+        ),
+        console=None,
+    )
+    assert res_missing == 1
+
+    # Test selection options
+    with patch("portfootprint.cli.commands.webbrowser.open"):
+        assert (
+            cmd.execute(CommandContext(raw_line="report html", command_name="report", args=["html"]), console=None) == 0
+        )
+        assert (
+            cmd.execute(CommandContext(raw_line="report json", command_name="report", args=["json"]), console=None) == 0
+        )
+        assert (
+            cmd.execute(CommandContext(raw_line="report csv", command_name="report", args=["csv"]), console=None) == 0
+        )
+        assert (
+            cmd.execute(CommandContext(raw_line="report all", command_name="report", args=["all"]), console=None) == 0
+        )
+
+    # Test with Rich Console if available
+    try:
+        from rich.console import Console
+
+        c = Console(record=True)
+        assert cmd.execute(CommandContext(raw_line="report", command_name="report"), console=c) == 0
+        output = c.export_text()
+        assert "Report Formats & Selection Guide" in output
+    except ImportError:
+        pass
+
+
+def test_terminal_formatter_reports_section() -> None:
+    """Verifies print_reports_section with active reports and plain text / Rich fallbacks."""
+    # Empty reports dictionary: should return silently
+    TerminalFormatter.print_reports_section({})
+
+    # Mock reports
+    sample_reports = {
+        "html": "sample_report.html",
+        "json": "sample_report.json",
+        "csv": "sample_report.csv",
+    }
+
+    # Plain text rendering (console=None)
+    TerminalFormatter.print_reports_section(sample_reports, console=None)
+
+    # Rich rendering if available
+    try:
+        from rich.console import Console
+
+        c = Console(record=True)
+        TerminalFormatter.print_reports_section(sample_reports, console=c)
+        rendered = c.export_text()
+        assert "Generated Reports" in rendered
+        assert "sample_report.html" in rendered
+    except ImportError:
+        pass

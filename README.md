@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT">
   <img src="https://img.shields.io/badge/Architecture-Clean%20%26%20SOLID-orange" alt="Architecture: Clean & SOLID">
   <img src="https://img.shields.io/badge/Runtime%20Dependencies-Zero%20(Pure%20Stdlib)-brightgreen" alt="Dependencies: Zero Required">
-  <img src="https://img.shields.io/badge/Tests-81%20Passed%20(100%25)-success" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-83%20Passed%20(100%25)-success" alt="Tests">
   <img src="https://img.shields.io/badge/Code%20Style-Ruff-black" alt="Code Style: Ruff">
   <img src="https://img.shields.io/badge/Type%20Check-Mypy%20Strict-blue" alt="Type Check: Mypy Strict">
 </p>
@@ -91,6 +91,7 @@ PortFootprint provides security researchers, penetration testers, and system adm
 - **System Doctor Diagnostics (`doctor`)**: Automated 5-point subsystem health check verifying Python environment, socket readiness, DNS resolution, protocol modules, and report exporters.
 - **Local Port Discovery (`local`)**: Discovers all active listening TCP ports on the local machine and immediately fingerprints them.
 - **Fast Scan Profile (`quick`)**: Rapidly scans top common service ports without entering verbose flag configurations.
+- **Interactive Report Navigator & Viewer (`report`)**: Dedicated CLI report format catalog and selector with OSC 8 terminal hyperlinks to click and launch reports directly in default browsers/viewers.
 - **Windows One-Click Launcher**: Includes `launch_cli.bat` for instant console startup on Windows workstations.
 
 ---
@@ -195,6 +196,7 @@ PortFootprint provides a dedicated, interactive security console with an ASCII b
 | **`local`** | `local [--all-reports] [--html FILE]` | Auto-detect active listening ports on this machine and fingerprint them |
 | **`quick`** | `quick <target> [--all-reports]` | Rapid scan on common top service ports |
 | **`scan`** | `scan <target> [-p PORTS] [-t THREADS] [-w TIMEOUT] [--all-reports]` | Scan target host with customizable ports, concurrency, and reports |
+| **`report`** | `report [html\|json\|csv\|all\|open <file>]` | Explore report formats catalog, select report type, or click to open |
 | **`doctor`** | `doctor` | Run 5-point subsystem health checks (sockets, DNS, modules, exporters) |
 | **`history`** | `history` | Display previous scans index in a formatted table |
 | **`compare`** | `compare <old.json> <new.json>` | Compare two historical JSON scans to detect state changes |
@@ -225,6 +227,10 @@ python main.py local
 
 # Quick scan of common ports on a target
 python main.py quick scanme.nmap.org
+
+# Explore report formats catalog and select/open generated reports
+python main.py report
+python main.py report html
 
 # Run 5-point subsystem diagnostic health check
 python main.py doctor
@@ -288,8 +294,8 @@ python main.py localhost --retries 2
 python main.py localhost --verbose
 ```
 
-### 7. Structured Report Generation
-Export scan findings into various file formats:
+### 7. Structured Report Generation & Interactive Report Viewer
+Export scan findings into various file formats, preview format capabilities, and click to open reports directly in your browser:
 ```bash
 # Export structured JSON report
 python main.py localhost --json my_scan.json
@@ -303,9 +309,25 @@ python main.py localhost --html my_scan.html
 # Automatically generate all three reports (JSON, CSV, HTML)
 python main.py localhost --all-reports
 
+# Open interactive report format catalog and selection menu
+python main.py report
+
+# Direct shortcut to launch or inspect a specific report type
+python main.py report html
+python main.py report json
+python main.py report csv
+python main.py report open path/to/report.html
+
 # Write execution tracking log to a custom file
 python main.py localhost --log-file activity.log
 ```
+
+#### Generated Reports Section in CLI
+Whenever a scan generates report files (or when running `report`), PortFootprint automatically prints a styled **Generated Reports** panel containing:
+* **Report Format Badges**: Color-coded badges for HTML Dashboard, JSON Structured Data, and CSV Spreadsheets.
+* **File Metadata**: Exact file sizes (KB/B) and relative file destinations.
+* **OSC 8 Clickable Terminal Hyperlinks**: Clean `file:///...` links that you can directly **Click** or **Ctrl+Click** in modern terminal emulators (Windows Terminal, VS Code, iTerm, GNOME Terminal) to open the report immediately in your default browser or viewer.
+* **Interactive Selector**: Prompts `report select > [1]=HTML [2]=JSON [3]=CSV [4]=All` allowing you to inspect or open any report type on demand.
 
 ### 8. Scan History & Differential Comparisons
 Track execution history and compare scan results over time:

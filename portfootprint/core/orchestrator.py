@@ -116,6 +116,7 @@ class ScanManager:
 
                 rm = ReportManager(reports)
                 rm.generate_reports(scan_result)
+                TerminalFormatter.print_reports_section(reports)
             except Exception as e:
                 logger.exception(f"Failed to generate output reports: {e!s}")
 

@@ -3,9 +3,11 @@ Command Definitions and Dispatcher for PortFootprint CLI Console.
 Implements modular, user-friendly interactive commands.
 """
 
+import json
 import os
 import shlex
 import sys
+import webbrowser
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Optional
 
@@ -541,12 +543,387 @@ class ExitCommand(BaseCommand):
         sys.exit(0)
 
 
+class ReportCommand(BaseCommand):
+    """Explores, selects, and opens scan reports (HTML, JSON, CSV)."""
+
+    name = "report"
+    description = "Explore, select, and click/open reports (HTML, JSON, CSV, All)"
+    syntax = "report [html|json|csv|all|open <file>]"
+    aliases = ("reports", "rep")
+    examples = (
+        "report",
+        "report html",
+        "report json",
+        "report csv",
+        "report all",
+        "report open report.html",
+    )
+
+    @staticmethod
+    def _to_file_url(path: str) -> str:
+        clean = os.path.abspath(path).replace("\\", "/")
+        return f"file:///{clean}" if not clean.startswith("/") else f"file://{clean}"
+
+    @classmethod
+    def find_reports(cls) -> list[dict[str, str]]:
+        """Scans workspace and history for existing report files."""
+        candidates: list[dict[str, str]] = []
+        seen_paths: set[str] = set()
+
+        def add_file(fmt: str, p: str) -> None:
+            if not p:
+                return
+            abs_p = os.path.abspath(p)
+            norm_p = os.path.normcase(abs_p)
+            if norm_p in seen_paths:
+                return
+            seen_paths.add(norm_p)
+            if os.path.exists(abs_p):
+                sz = os.path.getsize(abs_p)
+                size_str = f"{sz / 1024:.1f} KB" if sz >= 1024 else f"{sz} B"
+                candidates.append(
+                    {
+                        "format": fmt.lower(),
+                        "path": p,
+                        "abs_path": abs_p,
+                        "size": size_str,
+                        "url": cls._to_file_url(abs_p),
+                    }
+                )
+
+        # Standard report filenames
+        for fmt, name in [
+            ("html", "report.html"),
+            ("html", "local_open_ports.html"),
+            ("html", "open_ports.html"),
+            ("json", "report.json"),
+            ("csv", "report.csv"),
+        ]:
+            if os.path.exists(name):
+                add_file(fmt, name)
+
+        # Scan history entries
+        try:
+            from portfootprint.core.history import ScanHistoryManager
+
+            hm = ScanHistoryManager()
+            for entry in hm.get_history():
+                for fmt, path in entry.get("reports", {}).items():
+                    if path and os.path.exists(path):
+                        add_file(fmt, path)
+        except Exception:
+            pass
+
+        return candidates
+
+    def execute(self, context: CommandContext, console: Optional[Any] = None) -> int:
+        args = context.args
+        existing = self.find_reports()
+
+        # Handle 'report open <file>'
+        if args and args[0].lower() == "open" and len(args) > 1:
+            target_file = args[1]
+            if os.path.exists(target_file):
+                file_url = self._to_file_url(target_file)
+                if console and RICH_AVAILABLE:
+                    console.print(
+                        f"[bold green][+] Opening report:[/bold green] [underline cyan]{file_url}[/underline cyan]"
+                    )
+                else:
+                    print(f"[+] Opening report: {file_url}")
+                webbrowser.open(file_url)
+                return 0
+            if console and RICH_AVAILABLE:
+                console.print(f"[bold red][!] File not found: {target_file}[/bold red]")
+            else:
+                print(f"[!] File not found: {target_file}")
+            return 1
+
+        # Render format catalog and existing report listings
+        self._render_catalog(console)
+        self._render_existing_reports(console, existing)
+
+        # Dispatch if action argument passed directly
+        action = args[0].lower() if args else None
+        if action:
+            return self._handle_selection(action, existing, console)
+
+        # Interactive selection prompt
+        if sys.stdin.isatty():
+            try:
+                if console and RICH_AVAILABLE:
+                    console.print(
+                        "[bold cyan]Select a report to open/preview ([white]1[/white]=HTML, [white]2[/white]=JSON, [white]3[/white]=CSV, [white]4[/white]=All, [white]open <file>[/white], or [white]q[/white] to return):[/bold cyan]"
+                    )
+                prompt_text = "report select > "
+                choice = input(prompt_text).strip()
+                if not choice or choice.lower() in ("q", "quit", "exit", "back"):
+                    return 0
+                if choice.lower().startswith("open "):
+                    file_to_open = choice[5:].strip()
+                    if os.path.exists(file_to_open):
+                        url = self._to_file_url(file_to_open)
+                        if console and RICH_AVAILABLE:
+                            console.print(
+                                f"[bold green][+] Opening:[/bold green] [underline cyan]{url}[/underline cyan]"
+                            )
+                        else:
+                            print(f"[+] Opening: {url}")
+                        webbrowser.open(url)
+                        return 0
+                    print(f"[!] File not found: {file_to_open}")
+                    return 1
+                return self._handle_selection(choice.lower(), existing, console)
+            except (KeyboardInterrupt, EOFError):
+                print()
+                return 0
+
+        return 0
+
+    def _render_catalog(self, console: Optional[Any]) -> None:
+        """Renders report format specifications table."""
+        if console and RICH_AVAILABLE:
+            tbl = Table(title="PortFootprint Report Formats & Selection Guide", border_style="cyan", show_header=True)
+            tbl.add_column("Option", style="bold white", width=8)
+            tbl.add_column("Format", style="bold green", width=18)
+            tbl.add_column("File Ext", style="cyan", width=10)
+            tbl.add_column("Key Capabilities & Interactive Features", style="white")
+            tbl.add_column("CLI Scan Flag", style="dim cyan", width=16)
+
+            tbl.add_row(
+                "[1]",
+                "HTML Dashboard",
+                ".html",
+                "Interactive responsive single-page web app with dark mode, live search filtering, summary cards, and collapsible certificate handshakes.",
+                "--html FILE",
+            )
+            tbl.add_row(
+                "[2]",
+                "JSON Data",
+                ".json",
+                "Full structured schema with host results, services, ports, certificates, and scan metrics for APIs, automation, and diffs.",
+                "--json FILE",
+            )
+            tbl.add_row(
+                "[3]",
+                "CSV Spreadsheet",
+                ".csv",
+                "Flattened spreadsheet listing (Port, State, Service, Version, Extra) ready for Excel, Google Sheets, and compliance archives.",
+                "--csv FILE",
+            )
+            tbl.add_row(
+                "[4]",
+                "All Reports",
+                "All (3)",
+                "Generates HTML Dashboard, JSON, and CSV simultaneously in a single scan pass for complete audit coverage.",
+                "--all-reports",
+            )
+            console.print(tbl)
+            console.print()
+        else:
+            print("=================================================")
+            print("PortFootprint Report Formats & Selection Guide")
+            print("=================================================")
+            print("[1] HTML Dashboard (.html)     - Interactive web report with dark mode & search filters")
+            print("[2] JSON Data (.json)          - Machine-readable structured format for APIs and diffs")
+            print("[3] CSV Spreadsheet (.csv)     - Flattened tabular spreadsheet for Excel and audits")
+            print("[4] All Reports (All 3)        - Generates HTML, JSON, and CSV simultaneously")
+            print("=================================================\n")
+
+    def _render_existing_reports(self, console: Optional[Any], existing: list[dict[str, str]]) -> None:
+        """Renders discovered report files with clickable links."""
+        if not existing:
+            msg = (
+                "[dim white]No reports found on disk yet. Run '[bold green]local[/bold green]' or "
+                "'[bold cyan]scan <target> --all-reports[/bold cyan]' to generate one.[/dim white]\n"
+            )
+            if console and RICH_AVAILABLE:
+                console.print(msg)
+            else:
+                print("No reports found on disk yet. Run 'local' or 'scan <target> --all-reports' to generate one.\n")
+            return
+
+        if console and RICH_AVAILABLE:
+            tbl = Table(title="Discovered Reports On Disk (Click to Open)", border_style="green", show_header=True)
+            tbl.add_column("Key", style="bold white", width=6)
+            tbl.add_column("Format", style="bold yellow", width=16)
+            tbl.add_column("File Name", style="cyan", width=26)
+            tbl.add_column("Size", style="dim white", width=10)
+            tbl.add_column("Clickable File Link", style="dim cyan")
+
+            badges = {
+                "html": "[bold green]HTML Dashboard[/bold green]",
+                "json": "[bold cyan]JSON Data[/bold cyan]",
+                "csv": "[bold yellow]CSV Spreadsheet[/bold yellow]",
+            }
+
+            for idx, r in enumerate(existing, start=1):
+                badge = badges.get(r["format"], r["format"].upper())
+                file_name = os.path.basename(r["path"])
+                link = f"[link={r['url']}][bold underline cyan]{r['url']}[/bold underline cyan][/link]"
+                tbl.add_row(f"[{idx}]", badge, file_name, r["size"], link)
+
+            panel = Panel(
+                tbl,
+                title="[bold green]✓ Generated Reports Available[/bold green]",
+                subtitle="[dim white]Tip: Click or Ctrl+Click on any link above, or select by number below[/dim white]",
+                border_style="green",
+            )
+            console.print(panel)
+            console.print()
+        else:
+            print("=================================================")
+            print("Discovered Reports On Disk")
+            print("=================================================")
+            for idx, r in enumerate(existing, start=1):
+                print(f"[{idx}] {r['format'].upper()}: {r['path']} ({r['size']})")
+                print(f"    Link: {r['url']}")
+            print("=================================================\n")
+
+    def _handle_selection(self, choice: str, existing: list[dict[str, str]], console: Optional[Any]) -> int:
+        """Processes report selection choice."""
+        if choice.isdigit():
+            val = int(choice)
+            if 1 <= val <= len(existing):
+                selected = existing[val - 1]
+                url = selected["url"]
+                if console and RICH_AVAILABLE:
+                    console.print(
+                        f"[bold green][+] Opening {selected['format'].upper()} report:[/bold green] [underline cyan]{url}[/underline cyan]"
+                    )
+                else:
+                    print(f"[+] Opening {selected['format'].upper()} report: {url}")
+                webbrowser.open(url)
+                return 0
+
+        if choice in ("1", "html"):
+            html_reports = [r for r in existing if r["format"] == "html"]
+            if html_reports:
+                target_url = html_reports[0]["url"]
+                if console and RICH_AVAILABLE:
+                    console.print(
+                        f"[bold green][+] Launching HTML Dashboard in browser:[/bold green] [underline cyan]{target_url}[/underline cyan]"
+                    )
+                else:
+                    print(f"[+] Launching HTML Dashboard in browser: {target_url}")
+                webbrowser.open(target_url)
+                return 0
+            if console and RICH_AVAILABLE:
+                console.print(
+                    "[yellow][!] No HTML report found on disk. Run '[bold green]local[/bold green]' or "
+                    "'[bold cyan]scan <target> --html report.html[/bold cyan]' first.[/yellow]"
+                )
+            else:
+                print("[!] No HTML report found on disk. Run 'local' or 'scan <target> --html report.html' first.")
+            return 0
+
+        if choice in ("2", "json"):
+            json_reports = [r for r in existing if r["format"] == "json"]
+            if json_reports:
+                selected = json_reports[0]
+                if console and RICH_AVAILABLE:
+                    console.print(
+                        f"[bold green][+] Found JSON report:[/bold green] [underline cyan]{selected['url']}[/underline cyan]"
+                    )
+                else:
+                    print(f"[+] Found JSON report: {selected['url']}")
+                try:
+                    with open(selected["abs_path"], encoding="utf-8") as f:
+                        data = json.load(f)
+                    summary = data.get("summary", {})
+                    if console and RICH_AVAILABLE:
+                        console.print(
+                            f"[cyan]Target:[/cyan] {data.get('target')} | [green]Open:[/green] {summary.get('open')} | [red]Closed:[/red] {summary.get('closed')}"
+                        )
+                        console.print(f"[dim white]Full report: {selected['abs_path']}[/dim white]")
+                    else:
+                        print(
+                            f"Target: {data.get('target')} | Open: {summary.get('open')} | Closed: {summary.get('closed')}"
+                        )
+                except Exception:
+                    webbrowser.open(selected["url"])
+                return 0
+            if console and RICH_AVAILABLE:
+                console.print(
+                    "[yellow][!] No JSON report found on disk. Run '[bold cyan]scan <target> --json report.json[/bold cyan]' first.[/yellow]"
+                )
+            else:
+                print("[!] No JSON report found on disk. Run 'scan <target> --json report.json' first.")
+            return 0
+
+        if choice in ("3", "csv"):
+            csv_reports = [r for r in existing if r["format"] == "csv"]
+            if csv_reports:
+                selected = csv_reports[0]
+                if console and RICH_AVAILABLE:
+                    console.print(
+                        f"[bold green][+] Found CSV report:[/bold green] [underline cyan]{selected['url']}[/underline cyan]"
+                    )
+                else:
+                    print(f"[+] Found CSV report: {selected['url']}")
+                try:
+                    with open(selected["abs_path"], encoding="utf-8", errors="replace") as f:
+                        lines = [line.strip() for line in f.readlines()[:10]]
+                    if console and RICH_AVAILABLE and lines:
+                        tbl = Table(title=f"CSV Preview: {os.path.basename(selected['path'])}", border_style="yellow")
+                        headers = [h.strip() for h in lines[0].split(",")]
+                        for h in headers:
+                            tbl.add_column(h, style="cyan")
+                        for line in lines[1:8]:
+                            row = [col.strip() for col in line.split(",")]
+                            while len(row) < len(headers):
+                                row.append("")
+                            tbl.add_row(*row[: len(headers)])
+                        console.print(tbl)
+                    else:
+                        for line in lines[:8]:
+                            print(line)
+                except Exception:
+                    webbrowser.open(selected["url"])
+                return 0
+            if console and RICH_AVAILABLE:
+                console.print(
+                    "[yellow][!] No CSV report found on disk. Run '[bold cyan]scan <target> --csv report.csv[/bold cyan]' first.[/yellow]"
+                )
+            else:
+                print("[!] No CSV report found on disk. Run 'scan <target> --csv report.csv' first.")
+            return 0
+
+        if choice in ("4", "all"):
+            if console and RICH_AVAILABLE:
+                console.print("[bold green][+] All Reports Selected:[/bold green]")
+                console.print("  • HTML Dashboard : [cyan]--html report.html[/cyan]")
+                console.print("  • JSON Data      : [cyan]--json report.json[/cyan]")
+                console.print("  • CSV Spreadsheet: [cyan]--csv report.csv[/cyan]")
+                console.print(
+                    "\n[dim white]To generate all formats at once, run: [bold cyan]scan <target> --all-reports[/bold cyan][/dim white]\n"
+                )
+            else:
+                print("[+] All Reports Selected:")
+                print("  • HTML Dashboard : --html report.html")
+                print("  • JSON Data      : --json report.json")
+                print("  • CSV Spreadsheet: --csv report.csv")
+                print("\nTo generate all formats at once, run: scan <target> --all-reports\n")
+            html_reports = [r for r in existing if r["format"] == "html"]
+            if html_reports:
+                webbrowser.open(html_reports[0]["url"])
+            return 0
+
+        if console and RICH_AVAILABLE:
+            console.print(f"[bold red][!] Unknown report option: '{choice}'. Type '1', '2', '3', or '4'.[/bold red]")
+        else:
+            print(f"[!] Unknown report option: '{choice}'. Type '1', '2', '3', or '4'.")
+        return 1
+
+
 def build_default_command_registry() -> dict[str, BaseCommand]:
     """Builds and returns the default command registry."""
     reg: dict[str, BaseCommand] = {
         "scan": ScanCommand(),
         "quick": QuickCommand(),
         "local": LocalCommand(),
+        "report": ReportCommand(),
+        "reports": ReportCommand(),
         "history": HistoryCommand(),
         "compare": CompareCommand(),
         "doctor": DoctorCommand(),

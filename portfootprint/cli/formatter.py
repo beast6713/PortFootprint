@@ -2,6 +2,7 @@
 TerminalFormatter module rendering formatted tables, summary statistics, and comparisons.
 """
 
+import os
 from typing import Any
 
 from portfootprint.core.models import ScanResult
@@ -193,6 +194,73 @@ class TerminalFormatter:
         summary_tbl.add_row("Scan Duration", f"{scan_result.duration:.2f} seconds")
 
         c.print(summary_tbl)
+        c.print()
+
+    @classmethod
+    def print_reports_section(cls, reports: dict[str, str], console: Any = None) -> None:
+        """
+        Renders a dedicated, styled Generated Reports section with clickable links and file metadata.
+        Falls back cleanly to plain text if Rich is unavailable.
+        """
+        active_reports = {k: v for k, v in reports.items() if v}
+        if not active_reports:
+            return
+
+        try:
+            from rich.console import Console
+            from rich.panel import Panel
+            from rich.table import Table
+        except ImportError:
+            print("\n=================================================")
+            print("Generated Scan Reports")
+            print("=================================================")
+            for fmt, path in active_reports.items():
+                abs_p = os.path.abspath(path)
+                size_str = ""
+                if os.path.exists(abs_p):
+                    sz = os.path.getsize(abs_p)
+                    size_str = f" ({sz / 1024:.1f} KB)"
+                file_url = f"file:///{abs_p.replace(os.sep, '/')}"
+                print(f"[{fmt.upper()}] {path}{size_str}")
+                print(f"  Clickable Link: {file_url}")
+            print("=================================================\n")
+            return
+
+        c = console or Console()
+        table = Table(border_style="green", show_header=True, header_style="bold green")
+        table.add_column("Report Type", style="bold white", width=18)
+        table.add_column("File Destination", style="cyan", width=26)
+        table.add_column("Size", style="dim white", width=12)
+        table.add_column("Clickable File Link / Status", style="dim cyan")
+
+        format_badges = {
+            "html": "[bold green]HTML Dashboard[/bold green]",
+            "json": "[bold cyan]JSON Structured[/bold cyan]",
+            "csv": "[bold yellow]CSV Spreadsheet[/bold yellow]",
+        }
+
+        for fmt, path in active_reports.items():
+            abs_p = os.path.abspath(path)
+            badge = format_badges.get(fmt.lower(), f"[bold white]{fmt.upper()}[/bold white]")
+            file_name = os.path.basename(path)
+
+            size_display = "N/A"
+            if os.path.exists(abs_p):
+                sz = os.path.getsize(abs_p)
+                size_display = f"{sz / 1024:.1f} KB" if sz >= 1024 else f"{sz} B"
+
+            clean_abs = abs_p.replace("\\", "/")
+            file_url = f"file:///{clean_abs}" if not clean_abs.startswith("/") else f"file://{clean_abs}"
+            link_markup = f"[link={file_url}][bold underline cyan]{file_url}[/bold underline cyan][/link]"
+            table.add_row(badge, file_name, size_display, link_markup)
+
+        panel = Panel(
+            table,
+            title="[bold green]✓ Generated Reports[/bold green]",
+            subtitle="[dim white]Tip: Click or Ctrl+Click on any link above to open directly in your browser or editor[/dim white]",
+            border_style="green",
+        )
+        c.print(panel)
         c.print()
 
     @classmethod

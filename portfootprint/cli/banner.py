@@ -97,7 +97,7 @@ class PortFootprintBanner:
             console.print(f"History Logged    : [bold cyan]{history_count}[/bold cyan] previous scans recorded")
             console.print("[dim cyan]──────────────────────────────────────────────────────────────────[/dim cyan]")
             console.print(
-                'Type "[bold cyan]help[/bold cyan]" for command list, "[bold green]local[/bold green]" to scan open ports, or "[bold red]exit[/bold red]" to quit.\n'
+                'Type "[bold cyan]help[/bold cyan]" for commands, "[bold green]local[/bold green]" to scan, "[bold yellow]report[/bold yellow]" to explore reports, or "[bold red]exit[/bold red]" to quit.\n'
             )
         else:
             print(cls.ASCII_ART)
@@ -112,4 +112,4 @@ class PortFootprintBanner:
             print(f"Exporters Ready   : {exporters} (JSON, CSV, HTML)")
             print(f"History Logged    : {history_count} previous scans")
             print("─" * 66)
-            print('Type "help" for command list, "local" to scan open ports, or "exit" to quit.\n')
+            print('Type "help" for commands, "local" to scan, "report" to explore reports, or "exit" to quit.\n')

@@ -46,6 +46,20 @@ def main() -> None:
     if raw_args:
         subcmd = raw_args[0].lower()
 
+        # Report subcommand: explore, select, or open reports
+        if subcmd in ("report", "reports"):
+            from portfootprint.cli.commands import CommandParser, ReportCommand
+
+            report_cmd = ReportCommand()
+            ctx = CommandParser.parse(" ".join(raw_args))
+            try:
+                from rich.console import Console
+
+                c = Console()
+            except ImportError:
+                c = None
+            sys.exit(report_cmd.execute(ctx, console=c))
+
         # Doctor health check
         if subcmd in ("doctor", "check"):
             from portfootprint.cli.doctor import DoctorDiagnostic
